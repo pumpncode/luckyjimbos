@@ -1,0 +1,881 @@
+-- Welcome to Lucky Jimbos mod (very dumb) (baby's first Balatro mod - don't be surprised if the code sucks)
+
+SMODS.Atlas {
+    key = "LuckyJimbo",
+    path = "LuckyJimbo.png",
+    px = 71,
+    py = 95
+}
+
+-- VEGAS JIMBO --
+SMODS.Joker {
+    key = 'jimbovegas',
+    unlocked = true,
+    loc_txt = {
+        name = "Jimbo in Vegas",
+        text = {
+            "Gains {X:chips,C:white}x#2#{} Chips for",
+            "every {C:attention}Straight Flush{} played",
+            "{C:inactive}(Currently {X:chips,C:white}x#1#{C:inactive} Chips)"
+        }
+    },
+    config = { extra = { xchips = 1, xchips_gain = 0.5, current_chip_gain = 0 } },
+    loc_vars = function(self, info_queue, card)
+        return { vars = {card.ability.extra.xchips, card.ability.extra.xchips_gain} }
+    end,
+    rarity = 2,
+    atlas = "LuckyJimbo",
+    pos = { x = 0, y = 0 },
+    cost = 5,
+    blueprint_compat = true,
+    calculate = function(self, card, context)
+        if context.before and next(context.poker_hands['Straight Flush']) and not context.blueprint then
+            card.ability.extra.xchips = card.ability.extra.xchips + card.ability.extra.xchips_gain
+            return {
+                message = 'x'..card.ability.extra.xchips,
+                colour = G.C.CHIPS,
+                card = card
+            }
+        elseif context.joker_main then
+            card.ability.extra.current_chip_gain = hand_chips * (card.ability.extra.xchips - 1)
+            return {
+                chip_mod = card.ability.extra.current_chip_gain,
+                message = localize { type = 'variable', key = 'a_chips', vars = { card.ability.extra.current_chip_gain } }
+            }
+        end
+    end
+}
+
+-- JIMBOTOMY --
+SMODS.Joker {
+    key = 'lobotojimbo',
+    unlocked = true,
+    loc_txt = {
+        name = "Jimbotomy",
+        text = {
+            "If played hand contains only",
+            "{C:attention}1{} card, adds a random {C:attention}Edition{}",
+            "copy to hand",
+            "{C:attention}Destroys{} the original card",
+            "after scoring"
+        }
+    },
+    config = {extra = {destroy_card_flag = false}},
+    loc_vars = function(self, info_queue, card)
+        return {}
+    end,
+    rarity = 3,
+    atlas = "LuckyJimbo",
+    pos = { x = 1, y = 0 },
+    cost = 7,
+    calculate = function(self, card, context)
+        
+        if context.before and #context.full_hand == 1 then
+
+            card.ability.extra.destroy_card_flag = true
+            local newcard
+
+            G.E_MANAGER:add_event(Event({
+                blocking = false,
+                func = function()
+                    if not context.before then return false end
+                    
+                    
+
+                    newcard = copy_card(context.full_hand[1])
+                    newcard:set_edition(poll_edition('lobotojimbo_edition', nil, true, true))
+                    newcard:add_to_deck()
+                    table.insert(G.playing_cards, newcard)
+                    G.hand:emplace(newcard)
+                    return true
+                end
+            }))
+            
+            return {
+                message = "Cloned!",
+                card = newcard
+            }
+        end
+
+        if context.after then
+
+            if card.ability.extra.destroy_card_flag then
+
+                card.ability.extra.destroy_card_flag = false
+                local othercard = context.full_hand[1]
+    
+                G.E_MANAGER:add_event(Event({
+                    blocking = false,
+                    func = function()
+                        if not context.after then
+                            return false
+                        end
+                        play_sound('tarot1')
+                        othercard:start_dissolve({G.C.RED}, nil, 1.6)
+                        G.E_MANAGER:add_event(Event({
+                            trigger = 'after',
+                            delay = 0.3,
+                            blockable = false,
+                            func = function()
+                                -- print("destroying card!")
+                                G.play:remove_card(othercard)
+                                othercard:remove()
+                                return true
+                            end
+                        }))
+                        return true
+                    end
+                    }))     
+            end
+        end
+    end
+}
+
+-- JIMBO STRIKE --
+SMODS.Joker {
+    key = 'jimbostrike',
+    unlocked = true,
+    loc_txt = {
+        name = "Jimbo Strike",
+        text = {
+            "{C:green}#7# in #8#{} chance to apply {C:mult}+#9#{} Mult",
+            "{C:green}#1# in #2#{} chance to apply {X:mult,C:white}x#3#{} Mult",
+            "Odds improve by {C:green}#6#{} after every hand",
+            "{C:inactive}Odds for each effect reset when triggered"
+        }
+    },
+    config = { extra = {mult_mod = 20, xmult_mod = 5, odds = 15, secondary_odds = 5, odds_mod = 1, secondary_odds_mod = 1, reset_flag = false, reset_secondary_flag = false, example_hand_count = 5} },
+    loc_vars = function(self, info_queue, card)
+            return { 
+                vars = { (G.GAME.probabilities.normal or 1) * card.ability.extra.odds_mod,
+                card.ability.extra.odds, 
+                card.ability.extra.xmult_mod, 
+                (G.GAME.probabilities.normal or 1) * card.ability.extra.example_hand_count + (G.GAME.probabilities.normal or 1), 
+                card.ability.extra.example_hand_count,
+                (G.GAME.probabilities.normal or 1),
+                (G.GAME.probabilities.normal or 1) * card.ability.extra.secondary_odds_mod,
+                card.ability.extra.secondary_odds,
+                card.ability.extra.mult_mod
+            } 
+            }
+    end,
+    rarity = 3,
+    atlas = "LuckyJimbo",
+    pos = { x = 2, y = 0 },
+    cost = 8,
+    blueprint_compat = true,
+    calculate = function(self, card, context)
+        if context.joker_main then
+
+            local apply_mod = false
+            local apply_xmod = false
+
+            if pseudorandom("jimbostrike") <= ((G.GAME.probabilities.normal or 1) * card.ability.extra.secondary_odds_mod) / card.ability.extra.secondary_odds then
+                card.ability.extra.secondary_reset_flag = true
+                apply_mod = true
+            end
+
+            if pseudorandom("jimbostrike") <= ((G.GAME.probabilities.normal or 1) * card.ability.extra.odds_mod) / card.ability.extra.odds then
+                card.ability.extra.reset_flag = true
+                apply_xmod = true
+            end
+
+            if apply_mod or apply_xmod then
+
+                t = { card = card }
+                
+                if apply_mod then
+                    t["mult_mod"] = card.ability.extra.mult_mod
+                    if not apply_xmod then
+                        t["message"] = localize { type = 'variable', key = 'a_mult', vars = { card.ability.extra.mult_mod } } 
+                    end
+                end
+                if apply_xmod then
+                    t["Xmult_mod"] = card.ability.extra.xmult_mod
+                    t["message"] = localize { type = 'variable', key = 'a_xmult', vars = { card.ability.extra.xmult_mod } } 
+                end
+
+                return t
+
+            else
+
+                card.ability.extra.secondary_odds_mod = card.ability.extra.secondary_odds_mod + 1 
+                card.ability.extra.odds_mod = card.ability.extra.odds_mod + 1 
+
+                return {
+                    message = '+ Odds',
+                    card = card
+                }
+
+            end
+
+        elseif context.after then
+            if card.ability.extra.reset_flag then
+                card.ability.extra.odds_mod = 1
+                card.ability.extra.reset_flag = false
+                return {
+                    message = 'Reset!',
+                    card = card
+                }
+            elseif card.ability.extra.secondary_reset_flag then
+                card.ability.extra.secondary_odds_mod = 1
+                card.ability.extra.secondary_reset_flag = false
+                return {
+                    message = 'Reset!',
+                    card = card
+                }
+            end
+            
+        end
+    end
+}
+
+-- COMRADE JIMBO --
+
+SMODS.Joker {
+    key = 'russianjimbo',
+    unlocked = true,
+    loc_txt = {
+        name = "Comrade Jimbo",
+        text = {
+            "{X:mult,C:white}x#1#{} Mult if lowest card",
+            "held in hand is a {C:attention}2"
+        }
+    },
+    config = { extra = {Xmult = 2} },
+    loc_vars = function(self, info_queue, card)
+        return { vars = {card.ability.extra.Xmult} }
+    end,
+    rarity = 2,
+    atlas = "LuckyJimbo",
+    pos = { x = 3, y = 0 },
+    cost = 5,
+    blueprint_compat = true,
+    calculate = function(self, card, context)
+        if context.joker_main then
+            for i = 1, #G.hand.cards do
+                if G.hand.cards[i]:get_id() == 2 and G.hand.cards[i].ability.effect ~= 'Stone Card' then
+                    return
+                    {
+                        Xmult_mod = card.ability.extra.Xmult,
+                        message = localize { type = 'variable', key = 'a_xmult', vars = { card.ability.extra.Xmult } },
+                        card = G.hand.cards[i]
+                    }
+                end
+            end
+        end
+    end
+}
+
+-- JIMBO SHUFFLE --
+
+SMODS.Joker {
+    key = 'jimboshuffle',
+    unlocked = true,
+    loc_txt = {
+        name = "Jimbo Shuffle",
+        text = {
+            "When blind is selected,",
+            "{C:attention}destroys{} a random Joker",
+            "and creates a new Joker of",
+            "{C:attention}higher Rarity{} (up to {C:mult}Rare{})",
+            "{C:inactive}(Must have room)",
+            "{C:inactive}Applies to all Jokers,",
+            "{C:inactive}self included",
+        }
+    },
+    rarity = 3,
+    atlas = "LuckyJimbo",
+    pos = { x = 4, y = 0 },
+    cost = 7,
+    calculate = function(self, card, context)
+        if context.setting_blind and not context.repetition then
+            
+            local joker_to_destroy = pseudorandom_element(G.jokers.cards, pseudoseed("jimboshuffle"), nil)
+            local old_rarity = joker_to_destroy.config.center.rarity
+            local new_rarity = 0
+            if old_rarity == 1 then new_rarity = 0.71 -- for some fucking reason when spawning jokers of a specific rarity you can't just do joker.rarity instead you gotta do bumass decimals
+            elseif old_rarity >= 2 then new_rarity = 0.96 end
+
+            print(joker_to_destroy.config.center.rarity)
+
+            G.E_MANAGER:add_event(Event({
+                blocking = false,
+                func = function()
+                    if not context.setting_blind then
+                        return false
+                    end
+                    play_sound('tarot1')
+                    joker_to_destroy:start_dissolve({G.C.RED}, nil, 1.6)
+                    G.E_MANAGER:add_event(Event({
+                        trigger = 'after',
+                        delay = 0.3,
+                        blocking = false,
+                        func = function()
+                            -- print("destroying card!")
+                            G.jokers:remove_card(joker_to_destroy)
+                            joker_to_destroy:remove()
+                            return true
+                        end
+                    }))
+
+                    local card = create_card('Joker', G.jokers, nil, new_rarity, nil, nil, nil, nil)
+                    card:add_to_deck()
+                    G.jokers:emplace(card)
+                    card:start_materialize()
+
+                    return true
+                end
+            }))     
+        end
+    end
+}
+
+-- JIMBOREE --
+
+SMODS.Joker {
+    key = 'jimboree',
+    unlocked = true,
+    loc_txt = {
+        name = "Jimboree",
+        text = {
+            "{C:green}#1# in #2#{} chance to add a random",
+            "{C:attention}Enhancement{} to each {C:attention}non-Enhanced{} card played",
+            "{C:green}#1# in #3#{} chance to remove",
+            "{C:attention}Enhancement{} from each {C:attention}Enhanced{} card played"
+        }
+    },
+    config = { extra = {odds1 = 3, odds2 = 5} },
+    loc_vars = function(self, info_queue, card)
+        return { vars = {G.GAME.probabilities.normal, card.ability.extra.odds1, card.ability.extra.odds2} }
+    end,
+    rarity = 3,
+    atlas = "LuckyJimbo",
+    pos = { x = 0, y = 1 },
+    cost = 8,
+    blueprint_compat = true,
+    calculate = function(self, card, context)
+        if context.before then
+            for i, c in ipairs(context.scoring_hand) do
+                if not (c.config.center == G.P_CENTERS.c_base) and not c.debuff then
+
+                    if pseudorandom('jimboree') < G.GAME.probabilities.normal / card.ability.extra.odds2 then
+    
+                        print("removing enhancement from card " .. i)
+
+                        c:set_ability(G.P_CENTERS.c_base, nil, false)
+    
+                        G.E_MANAGER:add_event(Event({
+                            blockable = false,
+                            func = function() 
+                                c:flip()
+                                play_sound('card1')
+                                c:juice_up(0.3, 0.3)
+                                return true
+                            end 
+                        }))
+                        
+                        G.E_MANAGER:add_event(Event({
+                            trigger = "after",
+                            delay = i * 0.1,
+                            blockable = false,
+                            func = function()
+                                if not context.individual and not context.cardarea == G.play and not context.other_card == c then return false end
+                                G.E_MANAGER:add_event(Event({
+                                    blockable = false,
+                                    trigger = 'after',
+                                    delay = 0.35,
+                                    func = function() 
+                                        c:flip()
+                                        play_sound('tarot2')
+                                        c:juice_up(0.3, 0.3)
+                                        return true 
+                                    end 
+                                }))
+                                return true
+                            end
+                        }))
+                    end
+                
+                elseif c.config.center == G.P_CENTERS.c_base then
+                    
+                    if pseudorandom('jimboree') < G.GAME.probabilities.normal / card.ability.extra.odds1 then 
+    
+                        local enhancement = nil
+                        while not enhancement do
+                            enhancement = SMODS.poll_enhancement({key = 'jimboree', guaranteed = true})
+                        end
+                        print("adding enhancement " .. enhancement .. " to card " .. i)
+                        c:set_ability(G.P_CENTERS[enhancement], nil, false)
+    
+                        G.E_MANAGER:add_event(Event({
+                            trigger = "after",
+                            delay = i * 0.1,
+                            blockable = false,
+                            func = function() 
+                                c:flip()
+                                play_sound('card1')
+                                c:juice_up(0.3, 0.3)
+                                return true
+                            end 
+                        }))
+
+                        G.E_MANAGER:add_event(Event({
+                            trigger = "after",
+                            delay = i * 0.1,
+                            blockable = false,
+                            func = function()
+                                if not context.individual and not context.cardarea == G.play and not context.other_card == c then return false end
+                                G.E_MANAGER:add_event(Event({
+                                    blockable = false,
+                                    trigger = 'after',
+                                    delay = 0.35,
+                                    func = function() 
+                                        c:flip()
+                                        play_sound('tarot2')
+                                        c:juice_up(0.3, 0.3)
+                                        return true 
+                                    end 
+                                }))
+                                return true
+                            end
+                        }))
+                    end
+                end
+            end
+        end
+    end
+}
+
+-- COOL JIMBO --
+
+SMODS.Joker {
+    key = 'cooljimbo',
+    loc_txt = {
+        name = 'Cool Jimbo',
+        text = {
+            '{C:chips}+#1#{} chips and {C:mult}+#2#{} mult',
+            'for each {C:attention}Enhanced{} card played'
+        }
+    },
+    config = { extra = {chips = 25, mult = 5} },
+    loc_vars = function(self, info_queue, card)
+        return { vars = {card.ability.extra.chips, card.ability.extra.mult} }
+    end,
+    rarity = 2,
+    atlas = "LuckyJimbo",
+    pos = { x = 2, y = 1 },
+    cost = 4,
+    blueprint_compat = true,
+    calculate = function(self, card, context)
+        if context.individual and context.cardarea == G.play and not (context.other_card.config.center == G.P_CENTERS.c_base) then
+            return
+            {
+                chips = card.ability.extra.chips,
+                mult = card.ability.extra.mult,
+                card = card
+            }
+        end
+    end
+}
+
+-- THE TWINS --
+
+SMODS.Joker {
+    key = 'jimbotwins',
+    loc_txt = {
+        name = "Jimbo Twins",
+        text = {
+            "Retriggers joker to the left {C:attention}#1#{} time(s)",
+            "When boss blind is selected, {C:attention}destroys{}",
+            "{C:attention}Joker{} to the right and adds",
+            "retriggers depending on its {C:attention}Rarity{}",
+            "{C:inactive}(i. e. Common = +1, Uncommon = +2, etc.)"
+        }
+    },
+    config = { extra = { retriggers = 1 } },
+    loc_vars = function(self, info_queue, card)
+        return {vars = {card.ability.extra.retriggers}}
+    end,
+    rarity = 4,
+    atlas = "LuckyJimbo",
+    pos = { x = 5, y = 2 },
+    soul_pos = { x = 6, y = 2 },
+    cost = 20,
+    calculate = function(self, card, context)
+
+        local my_pos = nil
+        for i = 1, #G.jokers.cards do
+            if G.jokers.cards[i] == card then my_pos = i; break end
+        end
+
+        if context.setting_blind and G.GAME.blind.boss then
+            
+            if my_pos and G.jokers.cards[my_pos + 1] and not card.getting_sliced and not G.jokers.cards[my_pos+1].ability.eternal and not G.jokers.cards[my_pos+1].getting_sliced then
+                local slice_target = G.jokers.cards[my_pos + 1]
+                slice_target.getting_sliced = true
+                G.E_MANAGER:add_event(Event({func = function()
+                    G.GAME.joker_buffer = 0
+                    card.ability.extra.retriggers = card.ability.extra.retriggers + slice_target.config.center.rarity
+                    card:juice_up(0.8, 0.8)
+                    slice_target:start_dissolve({HEX("57ecab")}, nil, 1.6)
+                    play_sound('slice1', 0.96+math.random()*0.08)
+                return true end }))
+            end
+        end
+
+        if context.retrigger_joker_check == true then
+
+            if my_pos and G.jokers.cards[my_pos - 1] and context.other_card == G.jokers.cards[my_pos - 1] then
+
+                return {
+                    message = localize('k_again_ex'),
+                    repetitions = card.ability.extra.retriggers,
+                    card = card
+                }
+
+            end
+        end
+    end
+}
+
+--JIMBRO--
+
+SMODS.Joker {
+    key = 'jimbro',
+    loc_txt = {
+        name = 'Jimbro',
+        text = {
+            'If played hand is',
+            'level {C:attention}#1#{} or higher,',
+            'gains {X:mult,C:white}x#2#{} mult per level',
+            '{C:inactive}(Currently {X:mult,C:white}x#3#{C:inactive} mult)'
+        }
+    },
+    config = { extra = {xmult = 1, xmult_mod = 0.025, min_level = 4}},
+    loc_vars = function(self, info_queue, card)
+        return { vars = {card.ability.extra.min_level, card.ability.extra.xmult_mod, card.ability.extra.xmult} }
+    end,
+    rarity = 2,
+    atlas = "LuckyJimbo",
+    pos = { x = 3, y = 1 },
+    cost = 6,
+    blueprint_compat = true,
+    calculate = function(self, card, context)
+        if context.before and not context.blueprint and G.GAME.hands[context.scoring_name].level >= card.ability.extra.min_level then
+            mult_gain = G.GAME.hands[context.scoring_name].level * card.ability.extra.xmult_mod
+            card.ability.extra.xmult = card.ability.extra.xmult + mult_gain
+            return {
+                message = localize{type = 'variable', key = 'a_xmult', vars = {card.ability.extra.xmult}}
+            }
+        elseif context.joker_main then
+            return {
+                Xmult_mod = card.ability.extra.xmult,
+                message = localize{type = 'variable', key = 'a_xmult', vars = {card.ability.extra.xmult}}
+            }
+        end
+    end
+}
+
+--NERDY JIMBO--
+
+SMODS.Joker {
+    key = 'nerdyjimbo',
+    loc_txt = {
+        name = "Nerdy Jimbo",
+        text = {
+            '{C:mult}+#1#{} Mult',
+            'Amount is {C:attention}doubled{} if numeric values of',
+            'scored hand add up to {C:attention}#2#',
+            '{C:inactive}Number changes every round'
+        }
+    },
+    config = { extra = {mult = 4}},
+    loc_vars = function(self, info_queue, card)
+        return { vars = {card.ability.extra.mult, G.GAME.current_round.nerd_target}}
+    end,
+    rarity = 2,
+    atlas = "LuckyJimbo",
+    pos = { x = 4, y = 1 },
+    cost = 4,
+    blueprint_compat = true,
+    calculate = function(self, card, context)
+        if context.before and not context.blueprint then
+            sum = 0
+            for i, c in pairs(context.scoring_hand) do
+                if not c:is_face() then
+                    val = c:get_id()
+
+                    if val == 14 then
+                        sum = sum + 1 -- ace = 1 i think
+                    else
+                        sum = sum + val -- hope this is compatible with that one mod with all the crazy number cards
+                    end
+                end
+            end
+            
+            -- print(sum)
+
+            if sum == G.GAME.current_round.nerd_target then
+                card.ability.extra.mult = card.ability.extra.mult * 2
+                return {
+                    message = "Upgraded!",
+                    color = G.C.MULT,
+                    card = card
+                }
+            end
+
+        elseif context.joker_main then
+            return{
+                mult_mod = card.ability.extra.mult,
+                message = localize{type = 'variable', key = 'a_mult', vars = {card.ability.extra.mult}}
+            }
+        end
+    end
+}
+
+-- DEALER JIMBO --
+
+local dealer_firsthandflag = false
+
+SMODS.Joker {
+    key = 'dealerjimbo',
+    loc_txt = {
+        name = "Dealer Jimbo",
+        text = {
+            '{C:attention}+#1#{} hand size on',
+            'first dealt hand of round'
+        }
+    },
+    config = { extra = {h_size = 5}},
+    loc_vars = function(self, info_queue, card)
+        return { vars = {card.ability.extra.h_size}}
+    end,
+    rarity = 2,
+    atlas = "LuckyJimbo",
+    pos = { x = 0, y = 2 },
+    cost = 4,
+    blueprint_compat = true,
+    calculate = function(self, card, context)
+        if context.first_hand_drawn then
+            G.hand:change_size(card.ability.extra.h_size)
+            dealer_firsthandflag = true
+        elseif dealer_firsthandflag and (context.before or context.pre_discard) then
+            G.hand:change_size(-card.ability.extra.h_size)
+            dealer_firsthandflag = false
+        end
+    end
+}
+
+-- JIMBO SWITCH --
+
+-- CALC FUNCTIONS --
+-- this is kind of icky im sorry
+
+local jswitch_left_joker, jswitch_right_joker, jswitch_active_joker
+    
+local jswitch_change_direction = function(card, context)
+                
+    card.ability.extra.isLeft = not card.ability.extra.isLeft
+
+    --set correct sprite
+    if card.ability.extra.isLeft then
+        print("switching to " .. jswitch_left_joker.ability.name)
+        jswitch_active_joker = jswitch_left_joker
+        G.E_MANAGER:add_event(Event({
+            func = function() 
+                if not context.cardarea == G.jokers then return false end
+                card.children.center:set_sprite_pos({ x = 5, y = 0 })
+                card.children.floating_sprite:set_sprite_pos({ x = 6, y = 0 })
+                return true
+            end
+        }))
+    else
+        print("switching to " .. jswitch_right_joker.ability.name)
+        jswitch_active_joker = jswitch_right_joker
+        G.E_MANAGER:add_event(Event({
+            func = function() 
+                if not context.cardarea == G.jokers then return false end
+                card.children.center:set_sprite_pos({ x = 5, y = 1 })
+                card.children.floating_sprite:set_sprite_pos({ x = 6, y = 1 })
+                return true
+            end
+        }))
+    end
+end
+   
+local jswitch_copy_joker = function(card, context, other)
+
+    if other and other.config.center.blueprint_compat then
+
+        --print('SWITCHY - copying!')
+
+        local new_context = context
+
+        new_context.blueprint = (context.blueprint and (context.blueprint + 1)) or 1
+        new_context.blueprint_card = context.blueprint_card or card
+        new_context.other_joker = card
+        
+        if context.blueprint > #G.jokers.cards + 1 then return end
+
+        local other_joker_ret = other:calculate_joker(context)
+
+        if other_joker_ret then 
+            other_joker_ret.card = context.blueprint_card or self
+            other_joker_ret.colour = G.C.BLUE
+            return other_joker_ret
+        end
+
+    else
+
+        --print('SWITCHY - no joker to copy')
+        return nil
+        
+    end
+
+end   
+
+local jswitch_get_jokers = function(card)
+    
+    local joker_id
+    local another_joker 
+
+    for i = 1, #G.jokers.cards do
+        if G.jokers.cards[i] == card then 
+            joker_id = i
+            break
+        end
+    end
+
+    return G.jokers.cards[joker_id - 1], G.jokers.cards[joker_id + 1]
+end
+    
+SMODS.Joker {
+    key = 'jimboswitch',
+    loc_txt = {
+        name = "Jimbo Switch",
+        text = {
+            "Copies ability of",
+            "{C:attention}Joker{} to the {C:attention}#1#{}",
+            "{C:inactive}Direction changes after all cards are scored",
+            "{C:inactive}and after all jokers are scored"
+        }
+    },
+    config = { extra = { isLeft = true } },
+    loc_vars = function(self, info_queue, card)
+        if card.ability.extra.isLeft then
+            return { vars = { "left" } }
+        else
+            return { vars = { "right" } }
+        end
+    end,
+    rarity = 3,
+    atlas = "LuckyJimbo",
+    pos = { x = 5, y = 0 },
+    soul_pos = { x = 6, y = 0 },
+    cost = 8,
+    blueprint_compat = true,
+    calculate = function(self, card, context)
+
+        local switch_flag = false
+        jswitch_left_joker, jswitch_right_joker = jswitch_get_jokers(card)
+
+        if not jswitch_active_joker then
+            if card.ability.extra.isLeft then
+                -- print("switching to " .. jswitch_left_joker.ability.name)
+                jswitch_active_joker = jswitch_left_joker
+            else
+                -- print("switching to " .. jswitch_left_joker.ability.name)
+                jswitch_active_joker = jswitch_right_joker
+            end
+        end
+        
+        if (context.joker_main or (context.after and context.cardarea == G.jokers)) and not context.blueprint then
+
+            jswitch_change_direction(card, context)
+            switch_flag = true
+
+        end
+
+        local ret = jswitch_copy_joker(card, context, jswitch_active_joker)
+        if ret then return ret end
+
+        if  switch_flag then
+            return
+            {
+                message = 'Switch!'
+            }
+        end
+    end,
+
+    set_sprites = function(self, card, front)
+        if card.ability then
+            if card.ability.extra.isLeft then
+                card.children.center:set_sprite_pos({ x = 5, y = 0 })
+                card.children.floating_sprite:set_sprite_pos({ x = 6, y = 0 })
+            else
+                card.children.center:set_sprite_pos({ x = 5, y = 1 })
+                card.children.floating_sprite:set_sprite_pos({ x = 6, y = 1 })
+            end
+        else
+            card.children.center:set_sprite_pos({ x = 5, y = 0 })
+            card.children.floating_sprite:set_sprite_pos({ x = 6, y = 0 })
+        end
+    end
+}
+
+-- -- JIMBROKER --
+-- SMODS.Joker {
+--     key = 'jimbroker',
+--     loc_txt = {
+--         name = "Jimbroker",
+--         text = {
+--             "When playing a {C:attention}gold card{},",
+--             "{C:green}#1# in #2#{} chance of doubling your money",
+--             "If unsuccessful,",
+--             "{C:green}#1# in #3#{} chance of halving your money"
+--         }
+--     },
+--     config = { extra = {odds = 2, sec_odds = 2} },
+--     loc_vars = function(self, info_queue, card)
+--         return { vars = {G.GAME.probabilities.normal, card.ability.extra.odds, card.ability.extra.sec_odds} }
+--     end,
+--     rarity = 4,
+--     atlas = "LuckyJimbo",
+--     pos = { x = 1, y = 1 },
+--     cost = 15,
+--     calculate = function(self, card, context)
+--         if context.individual and context.cardarea == G.play then
+--             if context.other_card.ability.name == 'Gold Card' then
+--                 if pseudorandom('jimbroker') < G.GAME.probabilities.normal / card.ability.extra.odds then
+--                     return 
+--                     {
+--                         dollars = G.GAME.dollars,
+--                         card = card
+--                     }
+--                 else
+--                     if pseudorandom('jimbroker') < G.GAME.probabilities.normal / card.ability.extra.sec_odds then
+--                         return 
+--                         {
+--                             dollars = -G.GAME.dollars/2,
+--                             card = card
+--                         }
+--                     end
+--                 end
+--             end
+--         end
+--     end
+-- }
+
+-- SETUP FUNCS / HOOKS --
+
+local igo = Game.init_game_object
+function Game:init_game_object()
+    local ret = igo(self)
+    ret.current_round.nerd_target = 50
+    return ret
+end
+
+function SMODS.current_mod.reset_game_globals(run_start)
+    G.GAME.current_round.nerd_target = math.floor(2 + (pseudorandom('nerdyjimbo') * 48)) -- random number between 2 and 50
+end
