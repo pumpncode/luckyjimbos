@@ -1,5 +1,4 @@
-###Lucky6's
-#Lucky Jimbos
+-#**Lucky6's Lucky Jimbos!**#-
 
 15 shiny new Jokers to spice up your runs!
 
