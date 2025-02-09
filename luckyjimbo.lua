@@ -702,7 +702,7 @@ SMODS.Joker {
                         
             card.ability.extra.isLeft = not card.ability.extra.isLeft
         
-            --set correct sprite
+            --switch & set correct sprite
             if card.ability.extra.isLeft then
                 print("SWITCHY - switching to " .. jswitch_left_joker.ability.name)
                 jswitch_active_joker = jswitch_left_joker
