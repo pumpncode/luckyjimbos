@@ -7,44 +7,44 @@ SMODS.Atlas {
     py = 95
 }
 
--- VEGAS JIMBO --
-SMODS.Joker {
-    key = 'jimbovegas',
-    unlocked = true,
-    loc_txt = {
-        name = "Jimbo in Vegas",
-        text = {
-            "Gains {X:chips,C:white}x#2#{} Chips for",
-            "every {C:attention}Straight Flush{} played",
-            "{C:inactive}(Currently {X:chips,C:white}x#1#{C:inactive} Chips)"
-        }
-    },
-    config = { extra = { xchips = 1, xchips_gain = 0.5, current_chip_gain = 0 } },
-    loc_vars = function(self, info_queue, card)
-        return { vars = {card.ability.extra.xchips, card.ability.extra.xchips_gain} }
-    end,
-    rarity = 2,
-    atlas = "LuckyJimbo",
-    pos = { x = 0, y = 0 },
-    cost = 5,
-    blueprint_compat = true,
-    calculate = function(self, card, context)
-        if context.before and next(context.poker_hands['Straight Flush']) and not context.blueprint then
-            card.ability.extra.xchips = card.ability.extra.xchips + card.ability.extra.xchips_gain
-            return {
-                message = 'x'..card.ability.extra.xchips,
-                colour = G.C.CHIPS,
-                card = card
-            }
-        elseif context.joker_main then
-            card.ability.extra.current_chip_gain = hand_chips * (card.ability.extra.xchips - 1)
-            return {
-                chip_mod = card.ability.extra.current_chip_gain,
-                message = localize { type = 'variable', key = 'a_chips', vars = { card.ability.extra.current_chip_gain } }
-            }
-        end
-    end
-}
+-- -- VEGAS JIMBO --
+-- SMODS.Joker {
+--     key = 'jimbovegas',
+--     unlocked = true,
+--     loc_txt = {
+--         name = "Jimbo in Vegas",
+--         text = {
+--             "Gains {X:chips,C:white}x#2#{} Chips for",
+--             "every {C:attention}Straight Flush{} played",
+--             "{C:inactive}(Currently {X:chips,C:white}x#1#{C:inactive} Chips)"
+--         }
+--     },
+--     config = { extra = { xchips = 1, xchips_gain = 0.5, current_chip_gain = 0 } },
+--     loc_vars = function(self, info_queue, card)
+--         return { vars = {card.ability.extra.xchips, card.ability.extra.xchips_gain} }
+--     end,
+--     rarity = 2,
+--     atlas = "LuckyJimbo",
+--     pos = { x = 0, y = 0 },
+--     cost = 5,
+--     blueprint_compat = true,
+--     calculate = function(self, card, context)
+--         if context.before and next(context.poker_hands['Straight Flush']) and not context.blueprint then
+--             card.ability.extra.xchips = card.ability.extra.xchips + card.ability.extra.xchips_gain
+--             return {
+--                 message = 'x'..card.ability.extra.xchips,
+--                 colour = G.C.CHIPS,
+--                 card = card
+--             }
+--         elseif context.joker_main then
+--             card.ability.extra.current_chip_gain = hand_chips * (card.ability.extra.xchips - 1)
+--             return {
+--                 chip_mod = card.ability.extra.current_chip_gain,
+--                 message = localize { type = 'variable', key = 'a_chips', vars = { card.ability.extra.current_chip_gain } }
+--             }
+--         end
+--     end
+-- }
 
 -- JIMBOTOMY --
 SMODS.Joker {
@@ -479,6 +479,44 @@ SMODS.Joker {
     end
 }
 
+--JIMBRO--
+
+SMODS.Joker {
+    key = 'jimbro',
+    loc_txt = {
+        name = 'Jimbro',
+        text = {
+            'If played hand is',
+            'level {C:attention}#1#{} or higher,',
+            'gains {X:mult,C:white}x#2#{} mult per level',
+            '{C:inactive}(Currently {X:mult,C:white}x#3#{C:inactive} mult)'
+        }
+    },
+    config = { extra = {xmult = 1, xmult_mod = 0.01, min_level = 5}},
+    loc_vars = function(self, info_queue, card)
+        return { vars = {card.ability.extra.min_level, card.ability.extra.xmult_mod, card.ability.extra.xmult} }
+    end,
+    rarity = 2,
+    atlas = "LuckyJimbo",
+    pos = { x = 3, y = 1 },
+    cost = 6,
+    blueprint_compat = true,
+    calculate = function(self, card, context)
+        if context.before and not context.blueprint and G.GAME.hands[context.scoring_name].level >= card.ability.extra.min_level then
+            mult_gain = G.GAME.hands[context.scoring_name].level * card.ability.extra.xmult_mod
+            card.ability.extra.xmult = card.ability.extra.xmult + mult_gain
+            return {
+                message = localize{type = 'variable', key = 'a_xmult', vars = {card.ability.extra.xmult}}
+            }
+        elseif context.joker_main then
+            return {
+                Xmult_mod = card.ability.extra.xmult,
+                message = localize{type = 'variable', key = 'a_xmult', vars = {card.ability.extra.xmult}}
+            }
+        end
+    end
+}
+
 -- THE TWINS --
 
 SMODS.Joker {
@@ -535,44 +573,6 @@ SMODS.Joker {
                 }
 
             end
-        end
-    end
-}
-
---JIMBRO--
-
-SMODS.Joker {
-    key = 'jimbro',
-    loc_txt = {
-        name = 'Jimbro',
-        text = {
-            'If played hand is',
-            'level {C:attention}#1#{} or higher,',
-            'gains {X:mult,C:white}x#2#{} mult per level',
-            '{C:inactive}(Currently {X:mult,C:white}x#3#{C:inactive} mult)'
-        }
-    },
-    config = { extra = {xmult = 1, xmult_mod = 0.01, min_level = 5}},
-    loc_vars = function(self, info_queue, card)
-        return { vars = {card.ability.extra.min_level, card.ability.extra.xmult_mod, card.ability.extra.xmult} }
-    end,
-    rarity = 2,
-    atlas = "LuckyJimbo",
-    pos = { x = 3, y = 1 },
-    cost = 6,
-    blueprint_compat = true,
-    calculate = function(self, card, context)
-        if context.before and not context.blueprint and G.GAME.hands[context.scoring_name].level >= card.ability.extra.min_level then
-            mult_gain = G.GAME.hands[context.scoring_name].level * card.ability.extra.xmult_mod
-            card.ability.extra.xmult = card.ability.extra.xmult + mult_gain
-            return {
-                message = localize{type = 'variable', key = 'a_xmult', vars = {card.ability.extra.xmult}}
-            }
-        elseif context.joker_main then
-            return {
-                Xmult_mod = card.ability.extra.xmult,
-                message = localize{type = 'variable', key = 'a_xmult', vars = {card.ability.extra.xmult}}
-            }
         end
     end
 }
