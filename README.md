@@ -2,7 +2,7 @@
 # Lucky Jimbos
 *v0.1.1~alpha*
 
-15 shiny new Jokers to spice up your runs!
+15 (currently 11) shiny new Jokers to spice up your runs!
 
 *This is my first ever mod - all feedback is welcome!*  
 
