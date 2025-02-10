@@ -1,9 +1,10 @@
 ### Lucky6's
 # Lucky Jimbos
+*v0.1.1~alpha*
 
 15 shiny new Jokers to spice up your runs!
 
-*This is my first ever mod - all feedback is welcome!*
+*This is my first ever mod - all feedback is welcome!*  
 
 ## Featured Jokers  
 - **Jimbo in Vegas (uncommon)**: gains x0.5 chips for every straight flush played. *(sprite is pending rework)*
@@ -16,3 +17,4 @@
 - **Jimbo Twins (legendary)**: retriggers joker to the left 1 time, when boss blind is selected destroys joker to the right and adds retriggers depending on rarity *(common = 1, uncommon = 2, rare = 3, etc.)*
 - **Jimbro (uncommon)**: if played hand is level 4 or higher, gains x0.025 mult per level
 - **Nerdy Jimbo (uncommon)**: +4 mult, amount is doubled if scored number cards add up to a random number between 2 and 50 that changes every round
+- **Dealer Jimbo (uncommon):** +5 hand size on first dealt hand of round
