@@ -629,12 +629,12 @@ SMODS.Joker {
     end
 }
 
--- SHOPPING JIMBO --
+-- NEPO JIMBO --
 
 SMODS.Joker {
-    key = 'shoppingjimbo',
+    key = 'nepojimbo',
     loc_txt = {
-        name = 'Shopping Jimbo',
+        name = 'Nepo Jimbo',
         text = {
             'Gains {X:mult,C:white}x#1#{} Mult for',
             'every {C:attention}#2#${} {C:inactive}(#4#){} spent in shop',
@@ -660,9 +660,11 @@ SMODS.Joker {
             if card.ability.extra.money_count >= card.ability.extra.money_req then
 
                 while card.ability.extra.money_count >= card.ability.extra.money_req do
+
                     card.ability.extra.money_count = card.ability.extra.money_count - card.ability.extra.money_req
                     card.ability.extra.xmult = card.ability.extra.xmult + card.ability.extra.xmult_mod
                     card.ability.extra.money_req = card.ability.extra.money_req + card.ability.extra.money_req_increase
+                    
                 end
                 
                 return {
