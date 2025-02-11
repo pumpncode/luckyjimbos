@@ -7,7 +7,7 @@
 	"prefix": "L6jimbo",
 	"main_file": "luckyjimbo.lua",
 	"badge_colour": "C958D1",
-	"version": "0.1.1~alpha-1",
+	"version": "0.2~alpha-2",
 	"dependencies": [
 		"Steamodded (>=1.0.0~ALPHA-1225a)"
 	],
