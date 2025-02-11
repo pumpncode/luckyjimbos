@@ -454,7 +454,7 @@ SMODS.Joker {
             '{C:inactive}(Currently {X:mult,C:white}x#3#{C:inactive} mult)'
         }
     },
-    config = { extra = {xmult = 1, xmult_mod = 0.01, min_level = 5}},
+    config = { extra = {xmult = 1, xmult_mod = 0.05, min_level = 2}},
     loc_vars = function(self, info_queue, card)
         return { vars = {card.ability.extra.min_level, card.ability.extra.xmult_mod, card.ability.extra.xmult} }
     end,
@@ -470,7 +470,7 @@ SMODS.Joker {
             return {
                 message = localize{type = 'variable', key = 'a_xmult', vars = {card.ability.extra.xmult}}
             }
-        elseif context.joker_main then
+        elseif context.joker_main and card.ability.extra.xmult > 1 then
             return {
                 Xmult_mod = card.ability.extra.xmult,
                 message = localize{type = 'variable', key = 'a_xmult', vars = {card.ability.extra.xmult}}
@@ -641,7 +641,7 @@ SMODS.Joker {
             '{C:inactive}(Currently {X:mult,C:white}x#3#{C:inactive} mult)'
         }
     },
-    config = { extra = {xmult = 1, xmult_mod = 0.25, money_req = 10, money_count = 0, money_req_increase = 2}},
+    config = { extra = {xmult = 1, xmult_mod = 0.25, money_req = 10, money_count = 0, money_req_increase = 1}},
     loc_vars = function(self, info_queue, card)
         return { vars = {card.ability.extra.xmult_mod, card.ability.extra.money_req, card.ability.extra.xmult, card.ability.extra.money_count}}
     end,
@@ -652,26 +652,23 @@ SMODS.Joker {
     blueprint_compat = true,
     calculate = function(self, card, context)
 
-        if (context.buying_card or context.open_booster or context.reroll_shop) and not context.blueprint then
+        if (context.lj_easedollars and context.lj_easedollars < 0) and not context.blueprint then -- and G.shop
 
-            if context.reroll_shop then card.ability.extra.money_count = card.ability.extra.money_count + G.GAME.current_round.reroll_cost
-            else card.ability.extra.money_count = card.ability.extra.money_count + context.card.cost end
-            
+            card.ability.extra.money_count = card.ability.extra.money_count - context.lj_easedollars
+
             if card.ability.extra.money_count >= card.ability.extra.money_req then
 
                 while card.ability.extra.money_count >= card.ability.extra.money_req do
-
                     card.ability.extra.money_count = card.ability.extra.money_count - card.ability.extra.money_req
-                    card.ability.extra.xmult = card.ability.extra.xmult + card.ability.extra.xmult_mod
                     card.ability.extra.money_req = card.ability.extra.money_req + card.ability.extra.money_req_increase
-                    
+                    card.ability.extra.xmult = card.ability.extra.xmult + card.ability.extra.xmult_mod
                 end
-                
+    
                 return {
                     message = localize { type = 'variable', key = 'a_xmult', vars = { card.ability.extra.xmult } },
                     card = card
                 }
-
+    
             end
 
         elseif context.joker_main and card.ability.extra.xmult > 1 then
@@ -682,7 +679,155 @@ SMODS.Joker {
             }
 
         end
+    end
+}
 
+-- JIMBO SWITCH --
+
+SMODS.Joker {
+    key = 'jimboswitch',
+    loc_txt = {
+        name = "Jimbo Switch",
+        text = {
+            "Copies ability of",
+            "{C:attention}Joker{} to the {C:attention}#1#{}",
+            "{C:inactive}Direction changes when triggered",
+            "{C:inactive}and after hand is scored"
+        }
+    },
+    config = { extra = { isLeft = true } },
+    loc_vars = function(self, info_queue, card)
+        if card.ability.extra.isLeft then
+            return { vars = { "left" } }
+        else
+            return { vars = { "right" } }
+        end
+    end,
+    rarity = 3,
+    atlas = "LuckyJimbo",
+    pos = { x = 5, y = 0 },
+    soul_pos = { x = 6, y = 0 },
+    cost = 8,
+    blueprint_compat = true,
+    calculate = function(self, card, context)
+
+        local jswitch_left_joker, jswitch_right_joker, jswitch_active_joker
+    
+        local jswitch_change_direction = function()
+                        
+            card.ability.extra.isLeft = not card.ability.extra.isLeft
+        
+            --switch & set correct sprite
+            if card.ability.extra.isLeft then
+                print("SWITCHY - switching to " .. jswitch_left_joker.ability.name)
+                jswitch_active_joker = jswitch_left_joker
+                G.E_MANAGER:add_event(Event({
+                    func = function() 
+                        if not context.cardarea == G.jokers then return false end
+                        card.children.center:set_sprite_pos({ x = 5, y = 0 })
+                        card.children.floating_sprite:set_sprite_pos({ x = 6, y = 0 })
+                        return true
+                    end
+                }))
+            else
+                print("SWITCHY - switching to " .. jswitch_right_joker.ability.name)
+                jswitch_active_joker = jswitch_right_joker
+                G.E_MANAGER:add_event(Event({
+                    func = function() 
+                        if not context.cardarea == G.jokers then return false end
+                        card.children.center:set_sprite_pos({ x = 5, y = 1 })
+                        card.children.floating_sprite:set_sprite_pos({ x = 6, y = 1 })
+                        return true
+                    end
+                }))
+            end
+        end
+           
+        local jswitch_copy_joker = function()
+        
+            if jswitch_active_joker and jswitch_active_joker.config.center.blueprint_compat then
+        
+                -- print('SWITCHY - copying ' .. jswitch_active_joker.ability.name)
+        
+                local new_context = context
+        
+                new_context.blueprint = (context.blueprint and (context.blueprint + 1)) or 1
+                new_context.blueprint_card = context.blueprint_card or card
+                new_context.other_joker = card
+                
+                if context.blueprint > #G.jokers.cards + 1 then return end
+        
+                local other_joker_ret = jswitch_active_joker:calculate_joker(new_context)
+        
+                if other_joker_ret then 
+                    other_joker_ret.card = new_context.blueprint_card
+                    other_joker_ret.colour = G.C.BLUE
+                    print(inspect(other_joker_ret))
+                end
+                
+                return other_joker_ret
+
+            else
+        
+                -- print('SWITCHY - no joker to copy')
+                return nil
+                
+            end
+        
+        end   
+        
+        local jswitch_get_jokers = function()
+            
+            local joker_id
+            local another_joker 
+        
+            for i = 1, #G.jokers.cards do
+                if G.jokers.cards[i] == card then 
+                    joker_id = i
+                    break
+                end
+            end
+        
+            return G.jokers.cards[joker_id - 1], G.jokers.cards[joker_id + 1]
+        end
+        
+        jswitch_left_joker, jswitch_right_joker = jswitch_get_jokers()
+
+        if not jswitch_active_joker then
+            if card.ability.extra.isLeft then
+                -- print("switching to " .. jswitch_left_joker.ability.name)
+                jswitch_active_joker = jswitch_left_joker
+            else
+                -- print("switching to " .. jswitch_left_joker.ability.name)
+                jswitch_active_joker = jswitch_right_joker
+            end
+        end
+        
+        if (context.joker_main or (context.after and context.cardarea == G.jokers)) and not context.blueprint then
+
+            jswitch_change_direction()
+            SMODS.eval_this(card, { message = 'Switch!' })
+
+        end
+
+        local ret = jswitch_copy_joker()
+        if ret then return ret end
+
+    end,
+
+    set_sprites = function(self, card, front)
+        if card.ability then
+            if card.ability.extra.isLeft then
+                card.children.center:set_sprite_pos({ x = 5, y = 0 })
+                card.children.floating_sprite:set_sprite_pos({ x = 6, y = 0 })
+            else
+                card.children.center:set_sprite_pos({ x = 5, y = 1 })
+                card.children.floating_sprite:set_sprite_pos({ x = 6, y = 1 })
+            end
+        else
+            card.children.center:set_sprite_pos({ x = 5, y = 0 })
+            card.children.floating_sprite:set_sprite_pos({ x = 6, y = 0 })
+        end
     end
 }
 
@@ -694,6 +839,13 @@ function Game:init_game_object()
     local ret = igo(self)
     ret.current_round.nerd_target = 50
     return ret
+end
+
+local ed = ease_dollars
+function ease_dollars(mod, x)
+    ed(mod, x)
+    local effects
+    SMODS.calculate_context({lj_easedollars = mod}, effects)
 end
 
 function SMODS.current_mod.reset_game_globals(run_start)
@@ -790,166 +942,6 @@ end
 --                     end
 --                 end
 --             end
---         end
---     end
--- }
-
-
--- JIMBO SWITCH --
-
--- reason for scrap: i absolutely love the idea for this guy but i just cannot figure out how to get it working. ive genuinely spent weeks wrecking my brain trying to get this thing
--- to do its copy effects properly, and ive kinda just given up for now. if i can get some coding help with this one it might come back...
-
--- SMODS.Joker {
---     key = 'jimboswitch',
---     loc_txt = {
---         name = "Jimbo Switch",
---         text = {
---             "Copies ability of",
---             "{C:attention}Joker{} to the {C:attention}#1#{}",
---             "{C:inactive}Direction changes when triggered",
---             "{C:inactive}and after hand is scored"
---         }
---     },
---     config = { extra = { isLeft = true } },
---     loc_vars = function(self, info_queue, card)
---         if card.ability.extra.isLeft then
---             return { vars = { "left" } }
---         else
---             return { vars = { "right" } }
---         end
---     end,
---     rarity = 3,
---     atlas = "LuckyJimbo",
---     pos = { x = 5, y = 0 },
---     soul_pos = { x = 6, y = 0 },
---     cost = 8,
---     blueprint_compat = true,
---     calculate = function(self, card, context)
-
---         local jswitch_left_joker, jswitch_right_joker, jswitch_active_joker
-    
---         local jswitch_change_direction = function()
-                        
---             card.ability.extra.isLeft = not card.ability.extra.isLeft
-        
---             --switch & set correct sprite
---             if card.ability.extra.isLeft then
---                 print("SWITCHY - switching to " .. jswitch_left_joker.ability.name)
---                 jswitch_active_joker = jswitch_left_joker
---                 G.E_MANAGER:add_event(Event({
---                     func = function() 
---                         if not context.cardarea == G.jokers then return false end
---                         card.children.center:set_sprite_pos({ x = 5, y = 0 })
---                         card.children.floating_sprite:set_sprite_pos({ x = 6, y = 0 })
---                         return true
---                     end
---                 }))
---             else
---                 print("SWITCHY - switching to " .. jswitch_right_joker.ability.name)
---                 jswitch_active_joker = jswitch_right_joker
---                 G.E_MANAGER:add_event(Event({
---                     func = function() 
---                         if not context.cardarea == G.jokers then return false end
---                         card.children.center:set_sprite_pos({ x = 5, y = 1 })
---                         card.children.floating_sprite:set_sprite_pos({ x = 6, y = 1 })
---                         return true
---                     end
---                 }))
---             end
---         end
-           
---         local jswitch_copy_joker = function()
-        
---             if jswitch_active_joker and jswitch_active_joker.config.center.blueprint_compat then
-        
---                 -- print('SWITCHY - copying ' .. jswitch_active_joker.ability.name)
-        
---                 local new_context = context
-        
---                 new_context.blueprint = (context.blueprint and (context.blueprint + 1)) or 1
---                 new_context.blueprint_card = context.blueprint_card or card
---                 new_context.other_joker = card
-                
---                 if context.blueprint > #G.jokers.cards + 1 then return end
-        
---                 local other_joker_ret = jswitch_active_joker:calculate_joker(new_context)
-        
---                 if other_joker_ret then 
---                     other_joker_ret.card = context.blueprint_card or self
---                     other_joker_ret.colour = G.C.BLUE
---                     print(inspect(other_joker_ret))
---                 end
-                
---                 return other_joker_ret
-
---             else
-        
---                 -- print('SWITCHY - no joker to copy')
---                 return nil
-                
---             end
-        
---         end   
-        
---         local jswitch_get_jokers = function()
-            
---             local joker_id
---             local another_joker 
-        
---             for i = 1, #G.jokers.cards do
---                 if G.jokers.cards[i] == card then 
---                     joker_id = i
---                     break
---                 end
---             end
-        
---             return G.jokers.cards[joker_id - 1], G.jokers.cards[joker_id + 1]
---         end
-            
---         local switch_flag = false
---         jswitch_left_joker, jswitch_right_joker = jswitch_get_jokers()
-
---         if not jswitch_active_joker then
---             if card.ability.extra.isLeft then
---                 -- print("switching to " .. jswitch_left_joker.ability.name)
---                 jswitch_active_joker = jswitch_left_joker
---             else
---                 -- print("switching to " .. jswitch_left_joker.ability.name)
---                 jswitch_active_joker = jswitch_right_joker
---             end
---         end
-        
---         if (context.joker_main or (context.after and context.cardarea == G.jokers)) and not context.blueprint then
-
---             jswitch_change_direction()
---             switch_flag = true
-
---         end
-
---         local ret = jswitch_copy_joker()
---         if ret then return ret end
-
---         if switch_flag then
---             return
---             {
---                 message = 'Switch!'
---             }
---         end
---     end,
-
---     set_sprites = function(self, card, front)
---         if card.ability then
---             if card.ability.extra.isLeft then
---                 card.children.center:set_sprite_pos({ x = 5, y = 0 })
---                 card.children.floating_sprite:set_sprite_pos({ x = 6, y = 0 })
---             else
---                 card.children.center:set_sprite_pos({ x = 5, y = 1 })
---                 card.children.floating_sprite:set_sprite_pos({ x = 6, y = 1 })
---             end
---         else
---             card.children.center:set_sprite_pos({ x = 5, y = 0 })
---             card.children.floating_sprite:set_sprite_pos({ x = 6, y = 0 })
 --         end
 --     end
 -- }
