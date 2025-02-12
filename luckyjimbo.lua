@@ -682,6 +682,44 @@ SMODS.Joker {
     end
 }
 
+-- JIMBO RIPPER --
+
+SMODS.Joker {
+    key = 'jimboripper',
+    loc_txt = {
+        name = 'Jimbo the Ripper',
+        text = {
+            '{C:attention}Destroys{} all scoring cards',
+            'on first played hand',
+            'Gain {C:attention}#1#${} per card destroyed'
+        }
+    },
+    config = { extra = {dollars = 2}},
+    loc_vars = function(self, info_queue, card)
+        return { vars = {card.ability.extra.dollars}}
+    end,
+    rarity = 3,
+    atlas = "LuckyJimbo",
+    pos = { x = 1, y = 2 },
+    cost = 4,
+    blueprint_compat = false,
+    calculate = function(self, card, context)
+        if context.first_hand_drawn then
+
+            local eval = function() return G.GAME.current_round.hands_played == 0 end
+            juice_card_until(card, eval, true)
+
+        elseif G.GAME.current_round.hands_played == 0 and context.destroy_card and context.cardarea == G.play and not context.blueprint and not context.repetition then
+
+            return {
+                remove = true,
+                dollars = card.ability.extra.dollars
+            }
+            
+        end
+    end
+}
+
 -- JIMBO SWITCH --
 
 SMODS.Joker {
@@ -747,8 +785,6 @@ SMODS.Joker {
         
             if jswitch_active_joker and jswitch_active_joker.config.center.blueprint_compat then
         
-                -- print('SWITCHY - copying ' .. jswitch_active_joker.ability.name)
-        
                 local new_context = context
         
                 new_context.blueprint = (context.blueprint and (context.blueprint + 1)) or 1
@@ -768,8 +804,7 @@ SMODS.Joker {
                 return other_joker_ret
 
             else
-        
-                -- print('SWITCHY - no joker to copy')
+
                 return nil
                 
             end
@@ -795,10 +830,8 @@ SMODS.Joker {
 
         if not jswitch_active_joker then
             if card.ability.extra.isLeft then
-                -- print("switching to " .. jswitch_left_joker.ability.name)
                 jswitch_active_joker = jswitch_left_joker
             else
-                -- print("switching to " .. jswitch_left_joker.ability.name)
                 jswitch_active_joker = jswitch_right_joker
             end
         end
@@ -834,6 +867,7 @@ SMODS.Joker {
 
 -- SETUP FUNCS / HOOKS --
 
+-- game init hook
 local igo = Game.init_game_object
 function Game:init_game_object()
     local ret = igo(self)
@@ -841,6 +875,7 @@ function Game:init_game_object()
     return ret
 end
 
+-- easedollars context hook
 local ed = ease_dollars
 function ease_dollars(mod, x)
     ed(mod, x)
@@ -903,6 +938,7 @@ end
 
 -- reason for scrap: made a better legendary, wanted to keep only 1 legendary per 15 jokers. might consider doing something in this vein in the future, probably much more fleshed out
 -- (idea: x1 money at the end of round, adds x0.25 for every gold card destroyed)
+-- update: nepo jimbo is the spiritual successor of this
 
 -- SMODS.Joker {
 --     key = 'jimbroker',
