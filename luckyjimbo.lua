@@ -120,12 +120,16 @@ SMODS.Joker {
 
                 if apply_mod then
                     SMODS.eval_this(card, {message = localize { type = 'variable', key = 'a_mult', vars = { card.ability.extra.mult_mod } }, card = card, mult_mod = card.ability.extra.mult_mod })
+                    if not apply_xmod then
+                        card.ability.extra.odds_mod = card.ability.extra.odds_mod + 1 
+                    end
                 end
                 if apply_xmod then
                     SMODS.eval_this(card, {message = localize { type = 'variable', key = 'a_xmult', vars = { card.ability.extra.xmult_mod } }, card = card, Xmult_mod = card.ability.extra.xmult_mod })
+                    if not apply_mod then
+                        card.ability.extra.secondary_odds_mod = card.ability.extra.secondary_odds_mod + 1 
+                    end
                 end
-
-                return t
 
             else
 
@@ -832,6 +836,7 @@ SMODS.Joker {
         end
     end
 }
+
 
 
 -- SETUP FUNCS / HOOKS --
