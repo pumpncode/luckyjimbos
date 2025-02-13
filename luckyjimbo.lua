@@ -41,8 +41,6 @@ SMODS.Joker {
                 func = function()
                     if not context.before then return false end
                     
-                    
-
                     newcard = copy_card(context.full_hand[1])
                     newcard:set_edition(poll_edition('lobotojimbo_edition', nil, true, true))
                     newcard:add_to_deck()
@@ -53,40 +51,19 @@ SMODS.Joker {
             }))
             
             return {
-                message = "Cloned!",
-                card = newcard
+                message = localize('k_duplicated_ex'),
             }
         end
 
-        if context.after then
+        if context.destroy_card then
 
             if card.ability.extra.destroy_card_flag then
 
                 card.ability.extra.destroy_card_flag = false
-                local othercard = context.full_hand[1]
-    
-                G.E_MANAGER:add_event(Event({
-                    blocking = false,
-                    func = function()
-                        if not context.after then
-                            return false
-                        end
-                        play_sound('tarot1')
-                        othercard:start_dissolve({G.C.RED}, nil, 1.6)
-                        G.E_MANAGER:add_event(Event({
-                            trigger = 'after',
-                            delay = 0.3,
-                            blockable = false,
-                            func = function()
-                                -- print("destroying card!")
-                                G.play:remove_card(othercard)
-                                othercard:remove()
-                                return true
-                            end
-                        }))
-                        return true
-                    end
-                    }))     
+                return {
+                    remove = true
+                }
+
             end
         end
     end
@@ -99,20 +76,18 @@ SMODS.Joker {
     loc_txt = {
         name = "Jimbo Strike",
         text = {
-            "{C:green}#7# in #8#{} chance to apply {C:mult}+#9#{} Mult",
+            "{C:green}#5# in #6#{} chance to apply {C:mult}+#7#{} Mult",
             "{C:green}#1# in #2#{} chance to apply {X:mult,C:white}x#3#{} Mult",
-            "Odds improve by {C:green}#6#{} after every hand",
+            "Odds improve by {C:green}#4#{} after every hand",
             "{C:inactive}Odds for each effect reset when triggered"
         }
     },
-    config = { extra = {mult_mod = 20, xmult_mod = 5, odds = 15, secondary_odds = 5, odds_mod = 1, secondary_odds_mod = 1, reset_flag = false, reset_secondary_flag = false, example_hand_count = 5} },
+    config = { extra = {mult_mod = 20, xmult_mod = 5, odds = 15, secondary_odds = 5, odds_mod = 1, secondary_odds_mod = 1, reset_flag = false, reset_secondary_flag = false} },
     loc_vars = function(self, info_queue, card)
             return { 
                 vars = { (G.GAME.probabilities.normal or 1) * card.ability.extra.odds_mod,
                 card.ability.extra.odds, 
-                card.ability.extra.xmult_mod, 
-                (G.GAME.probabilities.normal or 1) * card.ability.extra.example_hand_count + (G.GAME.probabilities.normal or 1), 
-                card.ability.extra.example_hand_count,
+                card.ability.extra.xmult_mod,
                 (G.GAME.probabilities.normal or 1),
                 (G.GAME.probabilities.normal or 1) * card.ability.extra.secondary_odds_mod,
                 card.ability.extra.secondary_odds,
@@ -143,17 +118,11 @@ SMODS.Joker {
 
             if apply_mod or apply_xmod then
 
-                t = { card = card }
-                
                 if apply_mod then
-                    t["mult_mod"] = card.ability.extra.mult_mod
-                    if not apply_xmod then
-                        t["message"] = localize { type = 'variable', key = 'a_mult', vars = { card.ability.extra.mult_mod } } 
-                    end
+                    SMODS.eval_this(card, {message = localize { type = 'variable', key = 'a_mult', vars = { card.ability.extra.mult_mod } }, card = card, mult_mod = card.ability.extra.mult_mod })
                 end
                 if apply_xmod then
-                    t["Xmult_mod"] = card.ability.extra.xmult_mod
-                    t["message"] = localize { type = 'variable', key = 'a_xmult', vars = { card.ability.extra.xmult_mod } } 
+                    SMODS.eval_this(card, {message = localize { type = 'variable', key = 'a_xmult', vars = { card.ability.extra.xmult_mod } }, card = card, Xmult_mod = card.ability.extra.xmult_mod })
                 end
 
                 return t
