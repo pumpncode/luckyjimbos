@@ -595,7 +595,7 @@ SMODS.Joker {
         if context.first_hand_drawn then
             G.hand:change_size(card.ability.extra.h_size)
             dealer_firsthandflag = true
-        elseif dealer_firsthandflag and (context.before or context.pre_discard) then
+        elseif dealer_firsthandflag and (context.before or context.pre_discard or context.opening_booster) then
             G.hand:change_size(-card.ability.extra.h_size)
             dealer_firsthandflag = false
         end
@@ -837,8 +837,52 @@ SMODS.Joker {
     end
 }
 
+-- HIMBO --
 
+SMODS.Joker {
+    key = 'himbo',
+    unlocked = true,
+    loc_txt = {
+        name = "Himbo",
+        text = {
+            "{X:mult,C:white}x#1#{} Mult for every",
+            "{C:attention}King{} in deck above {C:attention}#2#{}",
+            "{C:inactive}(Currently{} {X:mult,C:white}x#4#{}{C:inactive} Mult)"
+        }
+    },
+    config = { extra = { xmult_mod = 0.25, threshold = 4, current_count = 0, xmult = 1 } },
+    loc_vars = function(self, info_queue, card)
+        return { vars = { card.ability.extra.xmult_mod, card.ability.extra.threshold, card.ability.extra.current_count, card.ability.extra.xmult} }
+    end,
+    rarity = 3,
+    atlas = "LuckyJimbo",
+    pos = { x = 2, y = 2 },
+    cost = 5,
+    blueprint_compat = true,
+    calculate = function(self, card, context)
+        if context.joker_main then
+            if card.ability.extra.xmult > 1 then
+                return {
+                    Xmult_mod = card.ability.extra.xmult,
+                    message = localize { type = 'variable', key = 'a_xmult', vars = { card.ability.extra.xmult } }
+                }
+            end
+        end
+    end,
 
+    update = function(self, card, dt)
+        if G.playing_cards then
+            card.ability.extra.current_count = 0
+            for k, v in pairs(G.playing_cards) do
+                if v:get_id() == 13 then card.ability.extra.current_count = card.ability.extra.current_count + 1 end
+            end
+            if card.ability and card.ability.extra and card.ability.extra.threshold then
+                card.ability.extra.xmult = 1 + ((card.ability.extra.current_count - card.ability.extra.threshold) * card.ability.extra.xmult_mod)
+                if card.ability.extra.xmult < 1 then card.ability.extra.xmult = 1 end
+            end
+        end
+    end
+}
 -- SETUP FUNCS / HOOKS --
 
 -- game init hook
@@ -861,6 +905,31 @@ function SMODS.current_mod.reset_game_globals(run_start)
     G.GAME.current_round.nerd_target = math.floor(2 + (pseudorandom('nerdyjimbo') * 48)) -- random number between 2 and 50
 end
 
+
+-- JOKER TEMPLATE -- 
+
+-- SMODS.Joker {
+--     key = 'jimbo',
+--     unlocked = true,
+--     loc_txt = {
+--         name = "Jimbo",
+--         text = {
+--             "desc"
+--         }
+--     },
+--     config = { extra = { } },
+--     loc_vars = function(self, info_queue, card)
+--         return { vars = { } }
+--     end,
+--     rarity = 2,
+--     atlas = "LuckyJimbo",
+--     pos = { x = 0, y = 0 },
+--     cost = 5,
+--     blueprint_compat = true,
+--     calculate = function(self, card, context)
+--
+--     end
+-- }
 
 -- SCRAPYARD --
 
