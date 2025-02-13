@@ -811,6 +811,10 @@ SMODS.Joker {
         
         if (context.joker_main or (context.after and context.cardarea == G.jokers)) and not context.blueprint then
 
+            if context.joker_main then
+                SMODS.eval_this(card, jswitch_copy_joker())
+            end
+
             jswitch_change_direction()
             SMODS.eval_this(card, { message = 'Switch!' })
 
