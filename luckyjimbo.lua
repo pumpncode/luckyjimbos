@@ -427,7 +427,7 @@ SMODS.Joker {
             '{C:inactive}(Currently {X:mult,C:white}x#3#{C:inactive} mult)'
         }
     },
-    config = { extra = {xmult = 1, xmult_mod = 0.05, min_level = 2}},
+    config = { extra = {xmult = 1, xmult_mod = 0.1, min_level = 2}},
     loc_vars = function(self, info_queue, card)
         return { vars = {card.ability.extra.min_level, card.ability.extra.xmult_mod, card.ability.extra.xmult} }
     end,
@@ -595,6 +595,7 @@ SMODS.Joker {
         if context.first_hand_drawn then
             G.hand:change_size(card.ability.extra.h_size)
             dealer_firsthandflag = true
+            SMODS.eval_this(card, {message = '+' .. card.ability.extra.h_size})
         elseif dealer_firsthandflag and (context.before or context.pre_discard or context.opening_booster) then
             G.hand:change_size(-card.ability.extra.h_size)
             dealer_firsthandflag = false
@@ -614,7 +615,7 @@ SMODS.Joker {
             '{C:inactive}(Currently {X:mult,C:white}x#3#{C:inactive} mult)'
         }
     },
-    config = { extra = {xmult = 1, xmult_mod = 0.1, money_req = 4, money_count = 0, money_req_increase = 1}},
+    config = { extra = {xmult = 1, xmult_mod = 0.2, money_req = 4, money_count = 0, money_req_increase = 1}},
     loc_vars = function(self, info_queue, card)
         return { vars = {card.ability.extra.xmult_mod, card.ability.extra.money_req, card.ability.extra.xmult, card.ability.extra.money_count}}
     end,
@@ -775,11 +776,7 @@ SMODS.Joker {
                 end
                 
                 return other_joker_ret
-
-            else
-
-                return nil
-                
+        
             end
         
         end   
@@ -811,11 +808,10 @@ SMODS.Joker {
         
         if (context.joker_main or (context.after and context.cardarea == G.jokers)) and not context.blueprint then
 
-            if context.joker_main then
-                SMODS.eval_this(card, jswitch_copy_joker())
-            end
-
+            SMODS.eval_this(card, jswitch_copy_joker()) -- make sure we copy the active joker before switching
+            
             jswitch_change_direction()
+
             SMODS.eval_this(card, { message = 'Switch!' })
 
         end
@@ -858,7 +854,7 @@ SMODS.Joker {
     loc_vars = function(self, info_queue, card)
         return { vars = { card.ability.extra.xmult_mod, card.ability.extra.threshold, card.ability.extra.current_count, card.ability.extra.xmult} }
     end,
-    rarity = 3,
+    rarity = 2,
     atlas = "LuckyJimbo",
     pos = { x = 2, y = 2 },
     cost = 5,
@@ -887,6 +883,48 @@ SMODS.Joker {
         end
     end
 }
+
+-- GROUPIE JIMBO --
+
+SMODS.Joker {
+    key = 'groupiejimbo',
+    unlocked = true,
+    loc_txt = {
+        name = "Groupie Jimbo",
+        text = {
+            "{C:attention}Aces{} of {V:1}Spades{} held in hand",
+            "give {X:mult,C:white}x#1#{} Mult",
+            "Increases by {X:mult,C:white}x#2#{} Mult for every",
+            "{C:attention}Ace{} of {V:1}Spades{} scored"
+        }
+    },
+    config = { extra = { xmult = 1, xmult_mod = 0.05 } },
+    loc_vars = function(self, info_queue, card)
+        return { vars = { card.ability.extra.xmult, card.ability.extra.xmult_mod, colours = {G.C.SUITS['Spades']}} }
+    end,
+    rarity = 3,
+    atlas = "LuckyJimbo",
+    pos = { x = 3, y = 2 },
+    cost = 6,
+    blueprint_compat = true,
+    calculate = function(self, card, context)
+        if context.individual and not context.end_of_round and context.other_card:get_id() == 14 and context.other_card:is_suit('Spades') then
+            if context.cardarea == G.play and not context.blueprint then
+                card.ability.extra.xmult = card.ability.extra.xmult + card.ability.extra.xmult_mod
+                return {
+                    message = localize { type = 'variable', key = 'a_xmult', vars = { card.ability.extra.xmult } },
+                    card = card
+                }
+            elseif context.cardarea == G.hand then
+                return {
+                    Xmult_mod = card.ability.extra.xmult,
+                    message = localize { type = 'variable', key = 'a_xmult', vars = { card.ability.extra.xmult } }
+                }
+            end
+        end
+    end
+}
+
 -- SETUP FUNCS / HOOKS --
 
 -- game init hook
