@@ -895,10 +895,11 @@ SMODS.Joker {
             "{C:attention}Aces{} of {V:1}Spades{} held in hand",
             "give {X:mult,C:white}x#1#{} Mult",
             "Increases by {X:mult,C:white}x#2#{} Mult for every",
-            "{C:attention}Ace{} of {V:1}Spades{} scored"
+            "{C:attention}Ace{} of {V:1}Spades{} scored this round",
+            "{C:inactive}Resets at end of round"
         }
     },
-    config = { extra = { xmult = 1, xmult_mod = 0.05 } },
+    config = { extra = { xmult = 1, xmult_mod = 0.25 } },
     loc_vars = function(self, info_queue, card)
         return { vars = { card.ability.extra.xmult, card.ability.extra.xmult_mod, colours = {G.C.SUITS['Spades']}} }
     end,
@@ -922,6 +923,14 @@ SMODS.Joker {
                 }
             end
         end
+
+        if context.end_of_round and not context.individual and not context.blueprint and not context.repetition then
+            card.ability.extra.xmult = 1
+            return {
+                message = localize('k_reset')
+            }
+        end
+
     end
 }
 
@@ -947,6 +956,7 @@ function SMODS.current_mod.reset_game_globals(run_start)
     G.GAME.current_round.nerd_target = math.floor(2 + (pseudorandom('nerdyjimbo') * 48)) -- random number between 2 and 50
 end
 
+SMODS.current_mod.optional_features = { retrigger_joker = true } -- this one line makes the twins work
 
 -- JOKER TEMPLATE -- 
 
