@@ -571,8 +571,6 @@ SMODS.Joker {
 
 -- DEALER JIMBO --
 
-local dealer_firsthandflag = false
-
 SMODS.Joker {
     key = 'dealerjimbo',
     loc_txt = {
@@ -594,11 +592,14 @@ SMODS.Joker {
     calculate = function(self, card, context)
         if context.first_hand_drawn then
             G.hand:change_size(card.ability.extra.h_size)
-            dealer_firsthandflag = true
             SMODS.eval_this(card, {message = '+' .. card.ability.extra.h_size})
-        elseif dealer_firsthandflag and (context.before or context.pre_discard or context.opening_booster) then
-            G.hand:change_size(-card.ability.extra.h_size)
-            dealer_firsthandflag = false
+            G.E_MANAGER:add_event(Event({
+                    trigger = 'after',
+                    delay = 0.3,
+                    func = function()
+                        G.hand:change_size(-card.ability.extra.h_size)
+                    end
+                }))
         end
     end
 }
@@ -772,7 +773,7 @@ SMODS.Joker {
                 if other_joker_ret then 
                     other_joker_ret.card = new_context.blueprint_card
                     other_joker_ret.colour = G.C.BLUE
-                    print(inspect(other_joker_ret))
+                    -- print(inspect(other_joker_ret))
                 end
                 
                 return other_joker_ret
@@ -816,8 +817,7 @@ SMODS.Joker {
 
         end
 
-        local ret = jswitch_copy_joker()
-        if ret then return ret end
+        return jswitch_copy_joker()
 
     end,
 
