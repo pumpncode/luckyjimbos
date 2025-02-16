@@ -899,7 +899,7 @@ SMODS.Joker {
             "{C:inactive}Resets at end of round"
         }
     },
-    config = { extra = { xmult = 1, xmult_mod = 0.25 } },
+    config = { extra = { xmult = 1.25, xmult_mod = 0.25 } },
     loc_vars = function(self, info_queue, card)
         return { vars = { card.ability.extra.xmult, card.ability.extra.xmult_mod, colours = {G.C.SUITS['Spades']}} }
     end,
