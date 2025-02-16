@@ -1,6 +1,6 @@
 ### Lucky6's
 # Lucky Jimbos
-*v0.1.1~alpha*
+*v0.3~alpha*
 
 15 (currently 11) shiny new Jokers to spice up your runs!
 
