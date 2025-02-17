@@ -29,6 +29,7 @@ SMODS.Joker {
     atlas = "LuckyJimbo",
     pos = { x = 1, y = 0 },
     cost = 7,
+    blueprint_compat = true,
     calculate = function(self, card, context)
         
         if context.before and #context.full_hand == 1 then
@@ -925,7 +926,7 @@ SMODS.Joker {
         end
 
         if context.end_of_round and not context.individual and not context.blueprint and not context.repetition then
-            card.ability.extra.xmult = 1
+            card.ability.extra.xmult = 1.25
             return {
                 message = localize('k_reset')
             }
