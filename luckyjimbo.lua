@@ -428,7 +428,7 @@ SMODS.Joker {
             '{C:inactive}(Currently {X:mult,C:white}x#3#{C:inactive} mult)'
         }
     },
-    config = { extra = {xmult = 1, xmult_mod = 0.1, min_level = 2}},
+    config = { extra = {xmult = 1, xmult_mod = 0.05, min_level = 2}},
     loc_vars = function(self, info_queue, card)
         return { vars = {card.ability.extra.min_level, card.ability.extra.xmult_mod, card.ability.extra.xmult} }
     end,
@@ -620,7 +620,7 @@ SMODS.Joker {
             '{C:inactive}(Currently {X:mult,C:white}x#3#{C:inactive} mult)'
         }
     },
-    config = { extra = {xmult = 1, xmult_mod = 0.2, money_req = 4, money_count = 0, money_req_increase = 1}},
+    config = { extra = {xmult = 1, xmult_mod = 0.1, money_req = 4, money_count = 0, money_req_increase = 1}},
     loc_vars = function(self, info_queue, card)
         return { vars = {card.ability.extra.xmult_mod, card.ability.extra.money_req, card.ability.extra.xmult, card.ability.extra.money_count}}
     end,
