@@ -591,14 +591,14 @@ SMODS.Joker {
     cost = 3,
     blueprint_compat = true,
     calculate = function(self, card, context)
-        if context.first_hand_drawn then
+        if context.setting_blind then
             G.hand:change_size(card.ability.extra.h_size)
             SMODS.eval_this(card, {message = '+' .. card.ability.extra.h_size})
             G.E_MANAGER:add_event(Event({
-                    trigger = 'after',
-                    delay = 0.3,
                     func = function()
+                        if not context.first_hand_drawn then return false end
                         G.hand:change_size(-card.ability.extra.h_size)
+                        return true
                     end
                 }))
         end
@@ -877,7 +877,7 @@ SMODS.Joker {
             for k, v in pairs(G.playing_cards) do
                 if v:get_id() == 13 then card.ability.extra.current_count = card.ability.extra.current_count + 1 end
             end
-            if card.ability and card.ability.extra and card.ability.extra.threshold then
+            if card.ability.extra.threshold then
                 card.ability.extra.xmult = 1 + ((card.ability.extra.current_count - card.ability.extra.threshold) * card.ability.extra.xmult_mod)
                 if card.ability.extra.xmult < 1 then card.ability.extra.xmult = 1 end
             end
