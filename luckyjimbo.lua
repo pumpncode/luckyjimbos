@@ -581,7 +581,7 @@ SMODS.Joker {
             'first dealt hand of round'
         }
     },
-    config = { extra = {h_size = 5}},
+    config = { extra = {h_size = 5, applied = false}},
     loc_vars = function(self, info_queue, card)
         return { vars = {card.ability.extra.h_size}}
     end,
@@ -593,14 +593,14 @@ SMODS.Joker {
     calculate = function(self, card, context)
         if context.setting_blind then
             G.hand:change_size(card.ability.extra.h_size)
-            SMODS.eval_this(card, {message = '+' .. card.ability.extra.h_size})
-            G.E_MANAGER:add_event(Event({
-                    func = function()
-                        if not context.first_hand_drawn then return false end
-                        G.hand:change_size(-card.ability.extra.h_size)
-                        return true
-                    end
-                }))
+            if not context.blueprint then
+                card.ability.extra.applied = true
+            end
+        elseif context.first_hand_drawn and card.ability.extra.applied then
+            G.hand:change_size(-card.ability.extra.h_size)
+            if not context.blueprint then
+                card.ability.extra.applied = false
+            end
         end
     end
 }
