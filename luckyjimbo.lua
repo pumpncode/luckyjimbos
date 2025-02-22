@@ -577,8 +577,8 @@ SMODS.Joker {
     loc_txt = {
         name = "Dealer Jimbo",
         text = {
-            '{C:attention}+#1#{} hand size on',
-            'first dealt hand of round'
+            '{C:attention}+#1#{} hand size',
+            'until a hand is played'
         }
     },
     config = { extra = {h_size = 5, applied = false}},
@@ -596,11 +596,14 @@ SMODS.Joker {
             if not context.blueprint then
                 card.ability.extra.applied = true
             end
-        elseif context.first_hand_drawn and card.ability.extra.applied then
+        elseif context.before and card.ability.extra.applied then
             G.hand:change_size(-card.ability.extra.h_size)
             if not context.blueprint then
                 card.ability.extra.applied = false
             end
+            return {
+                message = localize('k_reset')
+            }
         end
     end
 }
