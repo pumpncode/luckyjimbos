@@ -428,7 +428,7 @@ SMODS.Joker {
             '{C:inactive}(Currently {X:mult,C:white}x#3#{C:inactive} mult)'
         }
     },
-    config = { extra = {xmult = 1, xmult_mod = 0.05, min_level = 2}},
+    config = { extra = {xmult = 1, xmult_mod = 0.02, min_level = 5}},
     loc_vars = function(self, info_queue, card)
         return { vars = {card.ability.extra.min_level, card.ability.extra.xmult_mod, card.ability.extra.xmult} }
     end,
