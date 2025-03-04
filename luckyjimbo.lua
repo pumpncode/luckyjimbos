@@ -615,6 +615,12 @@ SMODS.Joker {
                 message = localize('k_reset')
             }
         end
+    end,
+    remove_from_deck = function ()
+        if card.ability.extra.applied then
+            local hand_diff = card.ability.extra.start_size - G.hand.config.card_limit
+            G.hand:change_size(to_big(hand_diff))
+        end
     end
 }
 
