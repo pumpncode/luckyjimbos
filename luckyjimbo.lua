@@ -730,7 +730,7 @@ J_switch = { -- utils
                     return true
                 end
             }))
-        elseif card.ability.extra.right_joker then
+        elseif not card.ability.extra.isLeft and card.ability.extra.right_joker then
             print("SWITCHY - switching to " .. card.ability.extra.right_joker.ability.name)
             card.ability.extra.active_joker = card.ability.extra.right_joker
             G.E_MANAGER:add_event(Event({
@@ -746,7 +746,7 @@ J_switch = { -- utils
        
     copy_joker = function(card, context)
     
-        if card.ability.extra.active_joker and card.ability.extra.active_joker.config.center.blueprint_compat then
+        if card.ability.extra.active_joker and card.ability.extra.active_joker.config and card.ability.extra.active_joker.config.center.blueprint_compat then
             
             local new_context = context
     
