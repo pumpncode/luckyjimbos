@@ -588,7 +588,7 @@ SMODS.Joker {
             'until a hand is played'
         }
     },
-    config = { extra = {h_size = 5, applied = false}},
+    config = { extra = {h_size = 5, applied = false, start_size = 8}},
     loc_vars = function(self, info_queue, card)
         return { vars = {card.ability.extra.h_size}}
     end,
@@ -598,13 +598,16 @@ SMODS.Joker {
     cost = 3,
     blueprint_compat = true,
     calculate = function(self, card, context)
-        if context.setting_blind then
+        if context.ending_shop then
+            card.ability.extra.start_size = G.hand.config.card_limit
+        elseif context.setting_blind then
             G.hand:change_size(to_big(card.ability.extra.h_size))
             if not context.blueprint then
                 card.ability.extra.applied = true
             end
         elseif (context.before or context.selling_self or context.destroying) and card.ability.extra.applied then
-            G.hand:change_size(to_big(-card.ability.extra.h_size))
+            local hand_diff = card.ability.extra.start_size - G.hand.config.card_limit
+            G.hand:change_size(to_big(hand_diff))
             if not context.blueprint then
                 card.ability.extra.applied = false
             end
