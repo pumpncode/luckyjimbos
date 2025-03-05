@@ -748,34 +748,6 @@ J_switch = { -- utils
             }))
         end
     end,
-       
-    copy_joker = function(card, context)
-    
-        if card.ability.extra.active_joker and card.ability.extra.active_joker.config and card.ability.extra.active_joker.config.center.blueprint_compat then
-            
-            local new_context = context
-    
-            new_context.blueprint = (context.blueprint and (context.blueprint + 1)) or 1
-            new_context.blueprint_card = context.blueprint_card or card
-            new_context.other_joker = card
-            
-            if context.blueprint > #G.jokers.cards + 1 then return end
-    
-            local other_joker_ret = card.ability.extra.active_joker:calculate_joker(new_context)
-    
-            if other_joker_ret then 
-                other_joker_ret.card = card
-                other_joker_ret.colour = G.C.BLUE
-                print("SWITCHY - copying " .. card.ability.extra.active_joker.ability.name)
-            else
-                print('i hope you fucking die')
-            end
-            
-            return other_joker_ret
-    
-        end
-    
-    end,
     
     get_jokers = function(card)
 
@@ -822,18 +794,7 @@ SMODS.Joker {
     blueprint_compat = true,
     calculate = function(self, card, context)
 
-        card.ability.extra.left_joker, card.ability.extra.right_joker = J_switch.get_jokers(card)
-
-        if not card.ability.extra.active_joker then
-            if card.ability.extra.isLeft then
-                card.ability.extra.active_joker = card.ability.extra.left_joker
-            else
-                card.ability.extra.active_joker = card.ability.extra.right_joker
-            end
-        end
-
         if context.individual and context.cardarea == G.play then
-            -- print(context.other_card.config.center.key .. "," .. context.other_card:get_id() .. " | " .. context.scoring_hand[#context.scoring_hand].config.center.key .. "," .. context.scoring_hand[#context.scoring_hand]:get_id() )
             if context.other_card and context.other_card == context.scoring_hand[#context.scoring_hand] then
                 card.ability.extra.last_card_scored = true
             end
@@ -842,23 +803,29 @@ SMODS.Joker {
         if ((card.ability.extra.last_card_scored and not context.individual) or (context.after and context.cardarea == G.jokers)) and not context.blueprint then
 
             card.ability.extra.last_card_scored = false
-            
-            local ret = J_switch.copy_joker(card, context)
-            if ret then
-                SMODS.calculate_effect(ret, card)
-            end
-            
             J_switch.change_direction(card, context)
-
             SMODS.calculate_effect({ message = 'Switch!' }, card)
 
         end
 
-        local ret = J_switch.copy_joker(card, context)
-        if ret then
-            SMODS.calculate_effect(ret, card)
+        if card.ability.extra.active_joker then
+            local ret = SMODS.blueprint_effect(card, card.ability.extra.active_joker, context)
+            if ret then return ret end
+        end
+        
+    end,
+
+    update = function (self, card, dt)
+        
+        if G.jokers then
+            card.ability.extra.left_joker, card.ability.extra.right_joker = J_switch.get_jokers(card)
         end
 
+        if card.ability.extra.isLeft then
+            card.ability.extra.active_joker = card.ability.extra.left_joker
+        else
+            card.ability.extra.active_joker = card.ability.extra.right_joker
+        end
     end,
 
     set_sprites = function(self, card, front)
