@@ -617,7 +617,7 @@ SMODS.Joker {
         end
     end,
     remove_from_deck = function ()
-        if card.ability.extra.applied then
+        if card and card.ability.extra.applied then
             local hand_diff = card.ability.extra.start_size - G.hand.config.card_limit
             G.hand:change_size(to_big(hand_diff))
         end
@@ -716,7 +716,6 @@ SMODS.Joker {
 }
 
 -- JIMBO SWITCH --
-
 
 J_switch = { -- utils
 
@@ -838,11 +837,14 @@ SMODS.Joker {
             end
         end
         
-        if (card.ability.extra.last_card_scored or (context.after and context.cardarea == G.jokers)) and not context.blueprint then
+        if ((card.ability.extra.last_card_scored and not context.individual) or (context.after and context.cardarea == G.jokers)) and not context.blueprint then
 
             card.ability.extra.last_card_scored = false
             
-            SMODS.calculate_effect(J_switch.copy_joker(card, context) or {}, card)
+            local ret = J_switch.copy_joker(card, context)
+            if ret then
+                SMODS.calculate_effect(ret, card)
+            end
             
             J_switch.change_direction(card, context)
 
@@ -850,7 +852,10 @@ SMODS.Joker {
 
         end
 
-        SMODS.calculate_effect(J_switch.copy_joker(card, context) or {}, card)
+        local ret = J_switch.copy_joker(card, context)
+        if ret then
+            SMODS.calculate_effect(ret, card)
+        end
 
     end,
 
