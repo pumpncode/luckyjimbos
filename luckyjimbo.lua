@@ -715,7 +715,7 @@ SMODS.Joker {
     end
 }
 
--- JIMBO SWITCH --
+-- JIMBO SWITCH -- *I HATE YOU I HATE YOU I HATE YOU I HATE YOU I HATE YOU I HATE YOU I HATE YOU I HATE YOU I HATE YOU I HATE YOU I HATE YOU I HATE YOU I HATE YOU I HATE YOU I HATE YOU I HATE YOU I HATE YOU I HATE YOU I HATE YOU I HATE YOU I HATE YOU I HATE YOU I HATE YOU 
 
 J_switch = { -- utils
 
@@ -767,6 +767,8 @@ J_switch = { -- utils
                 other_joker_ret.card = card
                 other_joker_ret.colour = G.C.BLUE
                 print("SWITCHY - copying " .. card.ability.extra.active_joker.ability.name)
+            else
+                print('i hope you fucking die')
             end
             
             return other_joker_ret
