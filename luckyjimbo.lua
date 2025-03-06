@@ -101,7 +101,7 @@ SMODS.Joker {
             } 
             }
     end,
-    rarity = 3,
+    rarity = 2,
     atlas = "LuckyJimbo",
     pos = { x = 2, y = 0 },
     cost = 8,
@@ -800,7 +800,7 @@ SMODS.Joker {
             end
         end
         
-        if ((card.ability.extra.last_card_scored and not context.individual) or (context.after and context.cardarea == G.jokers)) and not context.blueprint then
+        if ((card.ability.extra.last_card_scored and (context.cardarea == G.hand)) or (context.after and context.cardarea == G.jokers)) and not context.blueprint then
 
             card.ability.extra.last_card_scored = false
             J_switch.change_direction(card, context)

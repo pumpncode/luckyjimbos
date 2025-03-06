@@ -9,6 +9,6 @@
 	"badge_colour": "C958D1",
 	"version": "0.3~alpha-5",
 	"dependencies": [
-		"Steamodded (>=1.0.0~ALPHA-1410d)"
+		"Steamodded (>=1.0.0~BETA-0305c)"
 	],
 }
