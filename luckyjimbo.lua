@@ -125,13 +125,13 @@ SMODS.Joker {
             if apply_mod or apply_xmod then
 
                 if apply_mod then
-                    SMODS.calculate_effect(card, context, {message = localize { type = 'variable', key = 'a_mult', vars = { card.ability.extra.mult_mod } }, card = card, mult_mod = card.ability.extra.mult_mod })
+                    SMODS.calculate_effect({message = localize { type = 'variable', key = 'a_mult', vars = { card.ability.extra.mult_mod } }, card = card, mult_mod = card.ability.extra.mult_mod }, card)
                     if not apply_xmod then
                         card.ability.extra.odds_mod = card.ability.extra.odds_mod + 1 
                     end
                 end
                 if apply_xmod then
-                    SMODS.calculate_effect(card, context, {message = localize { type = 'variable', key = 'a_xmult', vars = { card.ability.extra.xmult_mod } }, card = card, Xmult_mod = card.ability.extra.xmult_mod })
+                    SMODS.calculate_effect({message = localize { type = 'variable', key = 'a_xmult', vars = { card.ability.extra.xmult_mod } }, card = card, Xmult_mod = card.ability.extra.xmult_mod }, card)
                     if not apply_mod then
                         card.ability.extra.secondary_odds_mod = card.ability.extra.secondary_odds_mod + 1 
                     end
@@ -829,7 +829,7 @@ SMODS.Joker {
     end,
 
     set_sprites = function(self, card, front)
-        if card.ability then
+        if card.ability and card.ability.extra then
             if card.ability.extra.isLeft then
                 card.children.center:set_sprite_pos({ x = 5, y = 0 })
                 card.children.floating_sprite:set_sprite_pos({ x = 6, y = 0 })
