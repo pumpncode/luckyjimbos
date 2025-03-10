@@ -616,7 +616,7 @@ SMODS.Joker {
             }
         end
     end,
-    remove_from_deck = function ()
+    remove_from_deck = function (self, card)
         if card and card.ability.extra.applied then
             local hand_diff = card.ability.extra.start_size - G.hand.config.card_limit
             G.hand:change_size(to_big(hand_diff))
