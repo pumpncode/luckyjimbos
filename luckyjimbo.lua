@@ -482,7 +482,7 @@ SMODS.Joker {
     atlas = "LuckyJimbo",
     pos = { x = 5, y = 2 },
     soul_pos = { x = 6, y = 2 },
-    cost = 10,
+    cost = 20,
     calculate = function(self, card, context)
 
         local my_pos = nil
