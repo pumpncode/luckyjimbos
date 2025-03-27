@@ -300,7 +300,7 @@ SMODS.Joker {
             for i, c in ipairs(context.scoring_hand) do
                 if not (c.config.center == G.P_CENTERS.c_base) and not c.debuff then
 
-                    if pseudorandom('jimboree') < to_big(G.GAME.probabilities.normal) / to_big(card.ability.extra.odds2) then
+                    if to_big(pseudorandom('jimboree')) < to_big(G.GAME.probabilities.normal) / to_big(card.ability.extra.odds2) then
     
                         print("removing enhancement from card " .. i)
 
@@ -340,7 +340,7 @@ SMODS.Joker {
                 
                 elseif c.config.center == G.P_CENTERS.c_base then
                     
-                    if pseudorandom('jimboree') < to_big(G.GAME.probabilities.normal) / to_big(card.ability.extra.odds1) then 
+                    if to_big(pseudorandom('jimboree')) < to_big(G.GAME.probabilities.normal) / to_big(card.ability.extra.odds1) then 
     
                         local enhancement = nil
                         while not enhancement do
@@ -881,11 +881,11 @@ SMODS.Joker {
         if G.playing_cards then
             card.ability.extra.current_count = 0
             for k, v in pairs(G.playing_cards) do
-                if v:get_id() == 13 then card.ability.extra.current_count = card.ability.extra.current_count + 1 end
+                if v:get_id() == 13 then card.ability.extra.current_count = to_big(card.ability.extra.current_count) + to_big(1) end
             end
             if card.ability.extra.threshold then
-                card.ability.extra.xmult = 1 + ((card.ability.extra.current_count - card.ability.extra.threshold) * card.ability.extra.xmult_mod)
-                if to_big(card.ability.extra.xmult) < to_big(1) then card.ability.extra.xmult = 1 end
+                card.ability.extra.xmult = to_big(1) + ((to_big(card.ability.extra.current_count) - to_big(card.ability.extra.threshold)) * to_big(card.ability.extra.xmult_mod))
+                if to_big(card.ability.extra.xmult) < to_big(1) then card.ability.extra.xmult = to_big(1) end
             end
         end
     end
