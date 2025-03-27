@@ -1,5 +1,10 @@
 -- Welcome to Lucky Jimbos mod (very dumb) (baby's first Balatro mod - don't be surprised if the code sucks)
 
+-- talisman compatibility dummy (so the mod doesnt crash if you dont have talisman enabled) (thank you talisman for making the life of mod devs fucking painful :3)
+to_big = to_big or function (value)
+    return value
+end
+
 SMODS.Atlas {
     key = "LuckyJimbo",
     path = "LuckyJimbo.png",
@@ -111,12 +116,12 @@ SMODS.Joker {
             local apply_mod = false
             local apply_xmod = false
 
-            if pseudorandom("jimbostrike") <= ((G.GAME.probabilities.normal or 1) * (card.ability.extra.secondary_odds_mod)) / (card.ability.extra.secondary_odds) then
+            if pseudorandom("jimbostrike") <= ((G.GAME.probabilities.normal or 1) * to_big(card.ability.extra.secondary_odds_mod)) / to_big(card.ability.extra.secondary_odds) then
                 card.ability.extra.secondary_reset_flag = true
                 apply_mod = true
             end
 
-            if pseudorandom("jimbostrike") <= ((G.GAME.probabilities.normal or 1) * (card.ability.extra.odds_mod)) / (card.ability.extra.odds) then
+            if pseudorandom("jimbostrike") <= ((G.GAME.probabilities.normal or 1) * to_big(card.ability.extra.odds_mod)) / to_big(card.ability.extra.odds) then
                 card.ability.extra.reset_flag = true
                 apply_xmod = true
             end
@@ -299,7 +304,7 @@ SMODS.Joker {
             for i, c in ipairs(context.scoring_hand) do
                 if not (c.config.center == G.P_CENTERS.c_base) and not c.debuff then
 
-                    if pseudorandom('jimboree') < G.GAME.probabilities.normal / (card.ability.extra.odds2) then
+                    if pseudorandom('jimboree') < G.GAME.probabilities.normal / to_big(card.ability.extra.odds2) then
     
                         print("removing enhancement from card " .. i)
 
@@ -339,7 +344,7 @@ SMODS.Joker {
                 
                 elseif c.config.center == G.P_CENTERS.c_base then
                     
-                    if pseudorandom('jimboree') < G.GAME.probabilities.normal / (card.ability.extra.odds1) then 
+                    if pseudorandom('jimboree') < G.GAME.probabilities.normal / to_big(card.ability.extra.odds1) then 
     
                         local enhancement = nil
                         while not enhancement do
@@ -443,14 +448,14 @@ SMODS.Joker {
     blueprint_compat = true,
     calculate = function(self, card, context)
         if context.before and not context.blueprint then
-            if G.GAME.hands[context.scoring_name].level >= (card.ability.extra.min_level) then
+            if G.GAME.hands[context.scoring_name].level >= to_big(card.ability.extra.min_level) then
                 local mult_gain = G.GAME.hands[context.scoring_name].level * card.ability.extra.xmult_mod
                 card.ability.extra.xmult = card.ability.extra.xmult + mult_gain
                 return {
                     message = localize{type = 'variable', key = 'a_xmult', vars = {card.ability.extra.xmult}}
                 }
             end
-        elseif context.joker_main and (card.ability.extra.xmult) > (1) then
+        elseif context.joker_main and to_big(card.ability.extra.xmult) > to_big(1) then
             return {
                 Xmult_mod = card.ability.extra.xmult,
                 message = localize{type = 'variable', key = 'a_xmult', vars = {card.ability.extra.xmult}}
@@ -600,13 +605,13 @@ SMODS.Joker {
         if context.ending_shop then
             card.ability.extra.start_size = G.hand.config.card_limit
         elseif context.setting_blind then
-            G.hand:change_size((card.ability.extra.h_size))
+            G.hand:change_size(to_big(card.ability.extra.h_size))
             if not context.blueprint then
                 card.ability.extra.applied = true
             end
         elseif (context.before or context.selling_self or context.destroying) and card.ability.extra.applied then
             local hand_diff = card.ability.extra.start_size - G.hand.config.card_limit
-            G.hand:change_size((hand_diff))
+            G.hand:change_size(to_big(hand_diff))
             if not context.blueprint then
                 card.ability.extra.applied = false
             end
@@ -618,7 +623,7 @@ SMODS.Joker {
     remove_from_deck = function (self, card)
         if card and card.ability.extra.applied then
             local hand_diff = card.ability.extra.start_size - G.hand.config.card_limit
-            G.hand:change_size((hand_diff))
+            G.hand:change_size(to_big(hand_diff))
         end
     end
 }
@@ -650,9 +655,9 @@ SMODS.Joker {
 
             card.ability.extra.money_count = card.ability.extra.money_count - context.lj_easedollars
 
-            if  (card.ability.extra.money_count) >=  (card.ability.extra.money_req) then
+            if to_big(card.ability.extra.money_count) >= to_big(card.ability.extra.money_req) then
 
-                while  (card.ability.extra.money_count) >=  (card.ability.extra.money_req) do
+                while to_big(card.ability.extra.money_count) >= to_big(card.ability.extra.money_req) do
                     card.ability.extra.money_count = card.ability.extra.money_count - card.ability.extra.money_req
                     card.ability.extra.money_req = card.ability.extra.money_req + card.ability.extra.money_req_increase
                     card.ability.extra.xmult = card.ability.extra.xmult + card.ability.extra.xmult_mod
@@ -665,7 +670,7 @@ SMODS.Joker {
     
             end
 
-        elseif context.joker_main and  (card.ability.extra.xmult) >  (1) then
+        elseif context.joker_main and to_big(card.ability.extra.xmult) > to_big(1) then
 
             return {
                 message = localize { type = 'variable', key = 'a_xmult', vars = { card.ability.extra.xmult } },
@@ -867,7 +872,7 @@ SMODS.Joker {
     blueprint_compat = true,
     calculate = function(self, card, context)
         if context.joker_main then
-            if  (card.ability.extra.xmult) >  (1) then
+            if to_big(card.ability.extra.xmult) > to_big(1) then
                 return {
                     Xmult_mod = card.ability.extra.xmult,
                     message = localize { type = 'variable', key = 'a_xmult', vars = { card.ability.extra.xmult } }
@@ -884,7 +889,7 @@ SMODS.Joker {
             end
             if card.ability.extra.threshold then
                 card.ability.extra.xmult = 1 + ((card.ability.extra.current_count - card.ability.extra.threshold) * card.ability.extra.xmult_mod)
-                if  (card.ability.extra.xmult) <  (1) then card.ability.extra.xmult = 1 end
+                if to_big(card.ability.extra.xmult) < to_big(1) then card.ability.extra.xmult = 1 end
             end
         end
     end
