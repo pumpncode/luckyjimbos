@@ -112,12 +112,12 @@ SMODS.Joker {
             local apply_mod = false
             local apply_xmod = false
 
-            if pseudorandom("jimbostrike") <= to_big(((G.GAME.probabilities.normal or 1)) * to_big(card.ability.extra.secondary_odds_mod)) / to_big(card.ability.extra.secondary_odds) then
+            if to_big(pseudorandom("jimbostrike_mult")) <= to_big(((G.GAME.probabilities.normal or 1)) * to_big(card.ability.extra.secondary_odds_mod)) / to_big(card.ability.extra.secondary_odds) then
                 card.ability.extra.secondary_reset_flag = true
                 apply_mod = true
             end
 
-            if pseudorandom("jimbostrike") <= to_big(((G.GAME.probabilities.normal or 1)) * to_big(card.ability.extra.odds_mod)) / to_big(card.ability.extra.odds) then
+            if to_big(pseudorandom("jimbostrike_Xmult")) <= to_big(((G.GAME.probabilities.normal or 1)) * to_big(card.ability.extra.odds_mod)) / to_big(card.ability.extra.odds) then
                 card.ability.extra.reset_flag = true
                 apply_xmod = true
             end
