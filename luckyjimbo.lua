@@ -7,6 +7,10 @@ SMODS.Atlas {
     py = 95
 }
 
+to_big = to_big or function (value) -- for talisman compat (legacy)
+    return value
+end
+
 -- JIMBOTOMY --
 SMODS.Joker {
     key = 'lobotojimbo',
@@ -642,7 +646,7 @@ SMODS.Joker {
     blueprint_compat = true,
     calculate = function(self, card, context)
 
-        if (context.lj_easedollars and context.lj_easedollars < 0) and not context.blueprint then -- and G.shop
+        if (context.lj_easedollars and context.lj_easedollars < to_big(0)) and not context.blueprint then -- and G.shop
 
             card.ability.extra.money_count = card.ability.extra.money_count - context.lj_easedollars
 
