@@ -12,10 +12,6 @@ SMODS.Atlas {
     py = 95
 }
 
-to_big = to_big or function (value) -- for talisman compat (legacy)
-    return value
-end
-
 -- JIMBOTOMY --
 SMODS.Joker {
     key = 'lobotojimbo',
@@ -116,12 +112,12 @@ SMODS.Joker {
             local apply_mod = false
             local apply_xmod = false
 
-            if pseudorandom("jimbostrike") <= ((G.GAME.probabilities.normal or 1) * to_big(card.ability.extra.secondary_odds_mod)) / to_big(card.ability.extra.secondary_odds) then
+            if pseudorandom("jimbostrike") <= to_big(((G.GAME.probabilities.normal or 1)) * to_big(card.ability.extra.secondary_odds_mod)) / to_big(card.ability.extra.secondary_odds) then
                 card.ability.extra.secondary_reset_flag = true
                 apply_mod = true
             end
 
-            if pseudorandom("jimbostrike") <= ((G.GAME.probabilities.normal or 1) * to_big(card.ability.extra.odds_mod)) / to_big(card.ability.extra.odds) then
+            if pseudorandom("jimbostrike") <= to_big(((G.GAME.probabilities.normal or 1)) * to_big(card.ability.extra.odds_mod)) / to_big(card.ability.extra.odds) then
                 card.ability.extra.reset_flag = true
                 apply_xmod = true
             end
@@ -304,7 +300,7 @@ SMODS.Joker {
             for i, c in ipairs(context.scoring_hand) do
                 if not (c.config.center == G.P_CENTERS.c_base) and not c.debuff then
 
-                    if pseudorandom('jimboree') < G.GAME.probabilities.normal / to_big(card.ability.extra.odds2) then
+                    if pseudorandom('jimboree') < to_big(G.GAME.probabilities.normal) / to_big(card.ability.extra.odds2) then
     
                         print("removing enhancement from card " .. i)
 
@@ -344,7 +340,7 @@ SMODS.Joker {
                 
                 elseif c.config.center == G.P_CENTERS.c_base then
                     
-                    if pseudorandom('jimboree') < G.GAME.probabilities.normal / to_big(card.ability.extra.odds1) then 
+                    if pseudorandom('jimboree') < to_big(G.GAME.probabilities.normal) / to_big(card.ability.extra.odds1) then 
     
                         local enhancement = nil
                         while not enhancement do
@@ -448,7 +444,7 @@ SMODS.Joker {
     blueprint_compat = true,
     calculate = function(self, card, context)
         if context.before and not context.blueprint then
-            if G.GAME.hands[context.scoring_name].level >= to_big(card.ability.extra.min_level) then
+            if to_big(G.GAME.hands[context.scoring_name].level) >= to_big(card.ability.extra.min_level) then
                 local mult_gain = G.GAME.hands[context.scoring_name].level * card.ability.extra.xmult_mod
                 card.ability.extra.xmult = card.ability.extra.xmult + mult_gain
                 return {
@@ -548,10 +544,10 @@ SMODS.Joker {
     blueprint_compat = true,
     calculate = function(self, card, context)
         if context.before and not context.blueprint then
-            sum = 0
-            for i, c in pairs(context.scoring_hand) do
+            local sum = 0
+            for _, c in pairs(context.scoring_hand) do
                 if not c:is_face() then
-                    val = c:get_id()
+                    local val = c:get_id()
 
                     if val == 14 then
                         sum = sum + 1 -- ace = 1 i think
@@ -605,13 +601,13 @@ SMODS.Joker {
         if context.ending_shop then
             card.ability.extra.start_size = G.hand.config.card_limit
         elseif context.setting_blind then
-            G.hand:change_size(to_big(card.ability.extra.h_size))
+            G.hand:change_size((card.ability.extra.h_size))
             if not context.blueprint then
                 card.ability.extra.applied = true
             end
         elseif (context.before or context.selling_self or context.destroying) and card.ability.extra.applied then
             local hand_diff = card.ability.extra.start_size - G.hand.config.card_limit
-            G.hand:change_size(to_big(hand_diff))
+            G.hand:change_size((hand_diff))
             if not context.blueprint then
                 card.ability.extra.applied = false
             end
@@ -623,7 +619,7 @@ SMODS.Joker {
     remove_from_deck = function (self, card)
         if card and card.ability.extra.applied then
             local hand_diff = card.ability.extra.start_size - G.hand.config.card_limit
-            G.hand:change_size(to_big(hand_diff))
+            G.hand:change_size((hand_diff))
         end
     end
 }
@@ -651,9 +647,9 @@ SMODS.Joker {
     blueprint_compat = true,
     calculate = function(self, card, context)
 
-        if (context.lj_easedollars and context.lj_easedollars < to_big(0)) and not context.blueprint then -- and G.shop
+        if (context.lj_easedollars and to_big(context.lj_easedollars) < to_big(0)) and not context.blueprint then -- and G.shop
 
-            card.ability.extra.money_count = card.ability.extra.money_count - context.lj_easedollars
+            card.ability.extra.money_count = to_big(card.ability.extra.money_count) - to_big(context.lj_easedollars)
 
             if to_big(card.ability.extra.money_count) >= to_big(card.ability.extra.money_req) then
 
@@ -910,7 +906,7 @@ SMODS.Joker {
             "{C:inactive}Resets at end of round"
         }
     },
-    config = { extra = { xmult = 1.25, xmult_mod = 0.25 } },
+    config = { extra = { xmult = 1.25, xmult_mod = 0.25, start_xmult = 1.25 } },
     loc_vars = function(self, info_queue, card)
         return { vars = { card.ability.extra.xmult, card.ability.extra.xmult_mod, colours = {G.C.SUITS['Spades']}} }
     end,
@@ -936,7 +932,7 @@ SMODS.Joker {
         end
 
         if context.end_of_round and not context.individual and not context.blueprint and not context.repetition then
-            card.ability.extra.xmult = 1.25
+            card.ability.extra.xmult = card.ability.extra.start_xmult
             return {
                 message = localize('k_reset')
             }
