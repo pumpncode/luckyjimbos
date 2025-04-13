@@ -1,8 +1,10 @@
 {
 	"id": "L6_luckyjimbo",
-	"name": "Lucky Jimbos: Joker Pack",	
+	"name": "Lucky Jimbos: Joker Pack",
 	"display_name": "Lucky Jimbos",
-	"author": ["LuckySix"],
+	"author": [
+		"LuckySix"
+	],
 	"description": "A collection of assorted (probably unbalanced) jokers to spice up your runs.",
 	"prefix": "L6jimbo",
 	"main_file": "luckyjimbo.lua",
